@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TACTIC — Connexion</title>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=JetBrains+Mono:wght@400;600&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0F2E3D;--bg1:#1F485A;--bg2:#20556A;--bg3:#1D6881;
+  --gold:#FFCD0D;--gold2:rgba(255,205,13,.12);--gold3:rgba(255,205,13,.25);
+  --green:#00E87A;--red:#FF3B5C;--blue:#4D9EFF;--purple:#A78BFA;
+  --txt:#E8F8FA;--muted:rgba(160,220,235,.55);--soft:rgba(210,242,248,.88);
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);
+  --font-title:'Bungee',sans-serif;--font-body:'Nunito',sans-serif;--font-mono:'JetBrains Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:var(--font-body);background:var(--bg);color:var(--txt);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem;}
+
+/* Background grid pattern */
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,205,13,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,205,13,.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;}
+
+/* Glow orbs */
+body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 50% at 20% 20%,rgba(77,158,255,.07) 0%,transparent 60%),radial-gradient(ellipse 50% 40% at 80% 80%,rgba(255,205,13,.06) 0%,transparent 60%);pointer-events:none;}
+
+.auth-wrap{position:relative;z-index:1;width:100%;max-width:440px;}
+
+/* Logo */
+.auth-logo{text-align:center;margin-bottom:2rem;}
+.auth-logo-title{font-family:var(--font-title);color:var(--gold);font-size:1.8rem;letter-spacing:.08em;}
+.auth-logo-sub{font-family:var(--font-mono);font-size:.62rem;color:var(--muted);margin-top:.3rem;letter-spacing:.12em;text-transform:uppercase;}
+
+/* Card */
+.auth-card{background:var(--bg1);border:1px solid var(--border2);border-radius:18px;padding:2rem 2.2rem;box-shadow:0 24px 64px rgba(0,0,0,.45);}
+
+/* Tabs */
+.auth-tabs{display:flex;background:var(--bg);border-radius:10px;padding:3px;margin-bottom:1.8rem;border:1px solid var(--border);}
+.auth-tab{flex:1;padding:.55rem;font-size:.75rem;font-weight:800;border:none;background:none;color:var(--muted);cursor:pointer;border-radius:8px;transition:.18s;letter-spacing:.03em;}
+.auth-tab.active{background:var(--gold);color:#000;}
+
+/* Form */
+.auth-form{display:none;}
+.auth-form.active{display:block;}
+.field-group{margin-bottom:1.1rem;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.1rem;}
+.field-label{font-size:.6rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:.35rem;}
+.field-input{width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);border-radius:9px;padding:.65rem .85rem;font-family:var(--font-body);font-size:.8rem;outline:none;transition:.18s;}
+.field-input::placeholder{color:rgba(160,220,235,.3);}
+.field-input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(255,205,13,.1);}
+.field-input.error{border-color:var(--red);box-shadow:0 0 0 3px rgba(255,59,92,.1);}
+
+/* Select */
+select.field-input{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23A0DCEB' d='M6 8L0 0h12z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .8rem center;padding-right:2.2rem;}
+select.field-input option{background:var(--bg1);}
+
+/* Password wrapper */
+.pw-wrap{position:relative;}
+.pw-wrap .field-input{padding-right:2.8rem;}
+.pw-toggle{position:absolute;right:.75rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:.75rem;padding:.1rem;line-height:1;}
+.pw-toggle:hover{color:var(--soft);}
+
+/* Strength bar */
+.pw-strength{height:3px;border-radius:2px;margin-top:.35rem;background:var(--border);overflow:hidden;}
+.pw-strength-bar{height:100%;border-radius:2px;width:0;transition:width .3s,background .3s;}
+
+/* Checkbox */
+.field-check{display:flex;align-items:center;gap:.5rem;cursor:pointer;}
+.field-check input{width:15px;height:15px;accent-color:var(--gold);cursor:pointer;}
+.field-check span{font-size:.7rem;color:var(--muted);}
+.field-check a{color:var(--gold);text-decoration:none;}
+.field-check a:hover{text-decoration:underline;}
+
+/* Forgot */
+.forgot-link{font-size:.65rem;color:var(--muted);text-decoration:none;float:right;margin-top:.3rem;transition:.15s;}
+.forgot-link:hover{color:var(--gold);}
+
+/* Divider */
+.auth-divider{display:flex;align-items:center;gap:.75rem;margin:1.3rem 0;font-size:.6rem;color:var(--muted);}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* Submit */
+.auth-submit{width:100%;padding:.8rem;font-size:.82rem;font-weight:800;border-radius:10px;border:none;background:var(--gold);color:#000;cursor:pointer;transition:.18s;letter-spacing:.03em;margin-top:.5rem;}
+.auth-submit:hover{filter:brightness(1.08);transform:translateY(-1px);}
+.auth-submit:active{transform:translateY(0);}
+
+/* Error msg */
+.field-error{font-size:.6rem;color:var(--red);margin-top:.3rem;display:none;}
+
+/* Alert */
+.auth-alert{padding:.6rem .85rem;border-radius:9px;font-size:.7rem;font-weight:700;margin-bottom:1rem;display:none;}
+.auth-alert.error{background:rgba(255,59,92,.1);border:1px solid rgba(255,59,92,.25);color:var(--red);}
+.auth-alert.success{background:rgba(0,232,122,.08);border:1px solid rgba(0,232,122,.2);color:var(--green);}
+
+/* Switch */
+.auth-switch{text-align:center;margin-top:1.3rem;font-size:.7rem;color:var(--muted);}
+.auth-switch button{background:none;border:none;color:var(--gold);font-weight:800;cursor:pointer;font-size:.7rem;font-family:var(--font-body);}
+.auth-switch button:hover{text-decoration:underline;}
+
+/* Back link */
+.auth-back{display:flex;align-items:center;justify-content:center;gap:.35rem;margin-top:1.5rem;font-size:.65rem;color:var(--muted);text-decoration:none;transition:.15s;}
+.auth-back:hover{color:var(--soft);}
+
+/* Roles */
+.role-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;}
+.role-card{padding:.6rem .75rem;border:1px solid var(--border2);border-radius:9px;background:var(--bg);cursor:pointer;transition:.18s;display:flex;align-items:center;gap:.5rem;}
+.role-card:hover{border-color:var(--border2);background:var(--bg2);}
+.role-card.selected{border-color:var(--gold);background:rgba(255,205,13,.08);}
+.role-card input{accent-color:var(--gold);cursor:pointer;}
+.role-card-lbl{font-size:.68rem;font-weight:700;color:var(--soft);}
+.role-card-sub{font-size:.55rem;color:var(--muted);margin-top:.06rem;}
+
+@media(max-width:480px){
+  .auth-card{padding:1.5rem 1.3rem;}
+  .field-row{grid-template-columns:1fr;}
+  .role-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<div class="auth-wrap">
+
+  <!-- Logo -->
+  <div class="auth-logo">
+    <div class="auth-logo-title">TACTIC</div>
+    <div class="auth-logo-sub">Corpus Builder — Plateforme pédagogique</div>
+  </div>
+
+  <!-- Card -->
+  <div class="auth-card">
+
+    <!-- Tabs -->
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tabLogin" onclick="switchTab('login')">Connexion</button>
+      <button class="auth-tab" id="tabRegister" onclick="switchTab('register')">Inscription</button>
+    </div>
+
+    <!-- Alert -->
+    <div class="auth-alert" id="authAlert"></div>
+
+    <!-- ── LOGIN FORM ── -->
+    <form class="auth-form active" id="formLogin" onsubmit="submitLogin(event)">
+
+      <div class="field-group">
+        <label class="field-label">Adresse email</label>
+        <input class="field-input" id="loginEmail" type="email" placeholder="vous@exemple.com" autocomplete="email" required>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Mot de passe
+          <a class="forgot-link" href="#" onclick="showForgot(event)">Mot de passe oublié ?</a>
+        </label>
+        <div class="pw-wrap">
+          <input class="field-input" id="loginPw" type="password" placeholder="••••••••" autocomplete="current-password" required>
+          <button type="button" class="pw-toggle" onclick="togglePw('loginPw',this)">👁</button>
+        </div>
+      </div>
+
+      <div class="field-group" style="margin-bottom:1.4rem;">
+        <label class="field-check">
+          <input type="checkbox" id="loginRemember">
+          <span>Se souvenir de moi</span>
+        </label>
+      </div>
+
+      <button type="submit" class="auth-submit">Se connecter</button>
+    </form>
+
+    <!-- ── REGISTER FORM ── -->
+    <form class="auth-form" id="formRegister" onsubmit="submitRegister(event)">
+
+      <div class="field-row">
+        <div>
+          <label class="field-label">Prénom</label>
+          <input class="field-input" id="regFirst" type="text" placeholder="Marie" required>
+        </div>
+        <div>
+          <label class="field-label">Nom</label>
+          <input class="field-input" id="regLast" type="text" placeholder="Dupont" required>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Adresse email</label>
+        <input class="field-input" id="regEmail" type="email" placeholder="vous@exemple.com" autocomplete="email" required>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Mot de passe</label>
+        <div class="pw-wrap">
+          <input class="field-input" id="regPw" type="password" placeholder="Min. 8 caractères" autocomplete="new-password" oninput="checkStrength(this.value)" required>
+          <button type="button" class="pw-toggle" onclick="togglePw('regPw',this)">👁</button>
+        </div>
+        <div class="pw-strength"><div class="pw-strength-bar" id="pwStrengthBar"></div></div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Confirmer le mot de passe</label>
+        <div class="pw-wrap">
+          <input class="field-input" id="regPwConfirm" type="password" placeholder="••••••••" autocomplete="new-password" required>
+          <button type="button" class="pw-toggle" onclick="togglePw('regPwConfirm',this)">👁</button>
+        </div>
+        <div class="field-error" id="pwMatchError">Les mots de passe ne correspondent pas.</div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" style="margin-bottom:.55rem;">Rôle</label>
+        <div class="role-grid">
+          <label class="role-card selected" id="role-ux">
+            <input type="radio" name="role" value="ux" checked onchange="selectRole('ux')">
+            <div><div class="role-card-lbl">UX Designer</div><div class="role-card-sub">Expérience apprenant</div></div>
+          </label>
+          <label class="role-card" id="role-ped">
+            <input type="radio" name="role" value="ped" onchange="selectRole('ped')">
+            <div><div class="role-card-lbl">Ing. Pédagogique</div><div class="role-card-sub">Conception de contenu</div></div>
+          </label>
+          <label class="role-card" id="role-data">
+            <input type="radio" name="role" value="data" onchange="selectRole('data')">
+            <div><div class="role-card-lbl">Data Analyst</div><div class="role-card-sub">Analyse & KPIs</div></div>
+          </label>
+          <label class="role-card" id="role-admin">
+            <input type="radio" name="role" value="admin" onchange="selectRole('admin')">
+            <div><div class="role-card-lbl">Administrateur</div><div class="role-card-sub">Accès complet</div></div>
+          </label>
+        </div>
+      </div>
+
+      <div class="field-group" style="margin-bottom:1.4rem;">
+        <label class="field-check">
+          <input type="checkbox" id="regTerms" required>
+          <span>J'accepte les <a href="#">conditions d'utilisation</a> et la <a href="#">politique de confidentialité</a></span>
+        </label>
+      </div>
+
+      <button type="submit" class="auth-submit">Créer mon compte</button>
+    </form>
+
+    <!-- Switch -->
+    <div class="auth-switch" id="authSwitch">
+      Pas encore de compte ?
+      <button onclick="switchTab('register')">S'inscrire</button>
+    </div>
+
+  </div>
+
+  <!-- Back to app -->
+  <a class="auth-back" href="index.html">← Retour à l'application</a>
+
+</div>
+
+<script>
+function switchTab(tab){
+  const isLogin=tab==='login';
+  document.getElementById('tabLogin').classList.toggle('active',isLogin);
+  document.getElementById('tabRegister').classList.toggle('active',!isLogin);
+  document.getElementById('formLogin').classList.toggle('active',isLogin);
+  document.getElementById('formRegister').classList.toggle('active',!isLogin);
+  document.getElementById('authSwitch').innerHTML=isLogin
+    ?'Pas encore de compte ? <button onclick="switchTab(\'register\')">S\'inscrire</button>'
+    :'Déjà un compte ? <button onclick="switchTab(\'login\')">Se connecter</button>';
+  hideAlert();
+}
+
+function togglePw(id,btn){
+  const inp=document.getElementById(id);
+  const show=inp.type==='password';
+  inp.type=show?'text':'password';
+  btn.textContent=show?'🙈':'👁';
+}
+
+function checkStrength(val){
+  const bar=document.getElementById('pwStrengthBar');
+  let score=0;
+  if(val.length>=8) score++;
+  if(/[A-Z]/.test(val)) score++;
+  if(/[0-9]/.test(val)) score++;
+  if(/[^A-Za-z0-9]/.test(val)) score++;
+  const pct=[0,25,50,75,100][score];
+  const col=score<=1?'var(--red)':score===2?'var(--gold)':score===3?'var(--blue)':'var(--green)';
+  bar.style.width=pct+'%';
+  bar.style.background=col;
+}
+
+function selectRole(val){
+  document.querySelectorAll('.role-card').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('role-'+val).classList.add('selected');
+}
+
+function showAlert(msg,type){
+  const el=document.getElementById('authAlert');
+  el.textContent=msg;
+  el.className='auth-alert '+type;
+  el.style.display='block';
+}
+function hideAlert(){ document.getElementById('authAlert').style.display='none'; }
+
+function submitLogin(e){
+  e.preventDefault();
+  const email=document.getElementById('loginEmail').value;
+  const pw=document.getElementById('loginPw').value;
+  if(!email||!pw){ showAlert('Veuillez remplir tous les champs.','error'); return; }
+  // Simulated auth — replace with real Supabase call
+  showAlert('Connexion simulée — intègre Supabase pour l\'authentification réelle.','success');
+  setTimeout(()=>{ window.location.href='index.html'; },1800);
+}
+
+function submitRegister(e){
+  e.preventDefault();
+  const pw=document.getElementById('regPw').value;
+  const pwc=document.getElementById('regPwConfirm').value;
+  const errEl=document.getElementById('pwMatchError');
+  const pwIn=document.getElementById('regPwConfirm');
+  if(pw!==pwc){
+    pwIn.classList.add('error');
+    errEl.style.display='block';
+    return;
+  }
+  pwIn.classList.remove('error');
+  errEl.style.display='none';
+  if(!document.getElementById('regTerms').checked){
+    showAlert('Veuillez accepter les conditions d\'utilisation.','error');
+    return;
+  }
+  showAlert('Compte créé — intègre Supabase pour l\'enregistrement réel.','success');
+  setTimeout(()=>{ switchTab('login'); hideAlert(); },2200);
+}
+
+function showForgot(e){
+  e.preventDefault();
+  const email=document.getElementById('loginEmail').value;
+  if(!email){ showAlert('Entrez votre email pour réinitialiser le mot de passe.','error'); return; }
+  showAlert('Lien de réinitialisation envoyé à '+email+' (simulé).','success');
+}
+</script>
+</body>
+</html>
