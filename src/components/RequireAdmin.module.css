@@ -1,0 +1,68 @@
+.forbidden {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.card {
+  max-width: 440px;
+  width: 100%;
+  background: var(--bg1);
+  border: 1px solid var(--border2);
+  border-radius: 18px;
+  padding: 2.2rem;
+  text-align: center;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
+}
+
+.icon {
+  font-size: 2.4rem;
+  margin-bottom: 0.8rem;
+}
+
+.title {
+  font-family: var(--font-title);
+  color: var(--gold);
+  font-size: 1.2rem;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.9rem;
+}
+
+.body {
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: var(--soft);
+  margin-bottom: 0.7rem;
+}
+
+.body code,
+.hint code {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  color: var(--gold);
+}
+
+.hint {
+  font-size: 0.74rem;
+  line-height: 1.6;
+  color: var(--muted);
+  margin-bottom: 1.4rem;
+}
+
+.btn {
+  padding: 0.7rem 1.5rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  border-radius: 10px;
+  border: none;
+  background: var(--gold);
+  color: #000;
+  cursor: pointer;
+  transition: 0.15s;
+}
+.btn:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}

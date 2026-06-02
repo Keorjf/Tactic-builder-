@@ -1,0 +1,36 @@
+/* Design tokens — copied verbatim from the legacy Corpus Builder :root.
+   Single source of truth for the dark-teal / gold theme. Do not rename a
+   variable here without renaming it everywhere it's consumed. */
+:root {
+  /* Background stack (dark teal) */
+  --bg: #0F2E3D;
+  --bg1: #1F485A;
+  --bg2: #20556A;
+  --bg3: #1D6881;
+
+  /* Brand gold */
+  --gold: #FFCD0D;
+  --gold2: rgba(255, 205, 13, 0.12);
+  --gold3: rgba(255, 205, 13, 0.25);
+
+  /* Accents */
+  --green: #00E87A;
+  --red: #FF3B5C;
+  --blue: #4D9EFF;
+  --purple: #A78BFA;
+  --orange: #FF7A00;
+
+  /* Text */
+  --txt: #E8F8FA;
+  --muted: rgba(160, 220, 235, 0.55);
+  --soft: rgba(210, 242, 248, 0.88);
+
+  /* Lines */
+  --border: rgba(255, 255, 255, 0.07);
+  --border2: rgba(255, 255, 255, 0.13);
+
+  /* Fonts */
+  --font-title: 'Bungee', sans-serif;
+  --font-body: 'Nunito', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
