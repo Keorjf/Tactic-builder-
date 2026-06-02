@@ -41,6 +41,7 @@ type CorpusState = {
   deleteLesson: (id: string) => Promise<void>;
   duplicateLesson: (id: string) => Promise<void>;
   saveTrack: (track: Track) => Promise<Track | null>;
+  importSeed: (tracks: Track[], lessons: Lesson[]) => Promise<boolean>;
 
   // Derived
   visibleLessons: () => Lesson[];
@@ -146,6 +147,19 @@ export const useCorpus = create<CorpusState>((set, get) => ({
     } catch (err) {
       toast(corpusErrorMessage(err), 'error');
       return null;
+    }
+  },
+
+  importSeed: async (tracks, lessons) => {
+    try {
+      await api.insertTracks(tracks);
+      const n = await api.insertLessons(lessons);
+      await get().load();
+      toast(`Imported ${n} lessons + ${tracks.length} modules`, 'success');
+      return true;
+    } catch (err) {
+      toast(corpusErrorMessage(err), 'error');
+      return false;
     }
   },
 

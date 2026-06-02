@@ -6,6 +6,7 @@ import AppShell from '@/components/AppShell';
 import { ToastHost } from '@/components/Toast';
 import AuthView from '@/views/AuthView';
 import ExploreView from '@/views/ExploreView';
+import ExportView from '@/views/ExportView';
 import Placeholder from '@/views/Placeholder';
 
 export default function App() {
@@ -27,7 +28,7 @@ export default function App() {
           <Route index element={<Navigate to="/explore" replace />} />
           <Route path="/explore" element={<ExploreView />} />
           <Route path="/ideas" element={<Placeholder title="Lesson Ideas" phase="Phase 6" />} />
-          <Route path="/export" element={<Placeholder title="Export & Import" phase="Phase 3" />} />
+          <Route path="/export" element={<ExportView />} />
           <Route path="/stats" element={<Placeholder title="Statistics" phase="Phase 4" />} />
           <Route path="/marketing" element={<Placeholder title="Marketing" phase="Phase 6" />} />
           <Route path="/agents" element={<Placeholder title="AI Agents" phase="Phase 6" />} />
