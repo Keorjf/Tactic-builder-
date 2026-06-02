@@ -1,0 +1,89 @@
+.card {
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+  background: var(--bg1);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  transition: 0.15s;
+}
+.card:hover {
+  border-color: var(--border2);
+}
+.main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.7rem 0.85rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  min-width: 0;
+}
+.emoji {
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+  min-width: 0;
+}
+.name {
+  color: var(--txt);
+  font-size: 0.82rem;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+  font-size: 0.62rem;
+  color: var(--muted);
+}
+.id {
+  font-family: var(--font-mono);
+  color: var(--blue);
+}
+.dot {
+  opacity: 0.5;
+}
+.warn {
+  color: var(--orange);
+}
+.draft {
+  color: var(--gold);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding-right: 0.55rem;
+}
+.act {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  border: 1px solid var(--border2);
+  background: var(--bg2);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.78rem;
+  transition: 0.15s;
+}
+.act:hover {
+  color: var(--gold);
+  border-color: var(--gold);
+}
+.danger:hover {
+  color: var(--red);
+  border-color: var(--red);
+}

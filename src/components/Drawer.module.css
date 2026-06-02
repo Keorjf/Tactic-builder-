@@ -1,0 +1,83 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s;
+  z-index: 500;
+}
+.backdropOpen {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  max-width: 100vw;
+  background: var(--bg);
+  border-left: 1px solid var(--border2);
+  box-shadow: -16px 0 48px rgba(0, 0, 0, 0.4);
+  transform: translateX(100%);
+  transition: transform 0.26s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 501;
+  display: flex;
+  flex-direction: column;
+}
+.drawerOpen {
+  transform: translateX(0);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  padding: 1rem 1.4rem;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.headText {
+  flex: 1;
+  min-width: 0;
+}
+.title {
+  font-family: var(--font-title);
+  color: var(--txt);
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+}
+.subtitle {
+  font-size: 0.68rem;
+  color: var(--muted);
+  margin-top: 0.2rem;
+}
+.headActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+.close {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid var(--border2);
+  background: var(--bg2);
+  color: var(--soft);
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: 0.15s;
+}
+.close:hover {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.2rem 1.4rem;
+}
