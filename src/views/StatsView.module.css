@@ -1,0 +1,382 @@
+.wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0.5rem 0 3rem;
+}
+
+.head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.4rem;
+}
+.title {
+  font-family: var(--font-title);
+  color: var(--gold);
+  font-size: 1.4rem;
+  letter-spacing: 0.04em;
+}
+.sub {
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+.btn {
+  padding: 0.55rem 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  border-radius: 8px;
+  border: 1px solid var(--border2);
+  background: var(--bg2);
+  color: var(--soft);
+  cursor: pointer;
+  transition: 0.15s;
+  white-space: nowrap;
+}
+.btn:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+/* ─── Sections ─────────────────────────────────────────────────────────── */
+.section {
+  margin-bottom: 2.4rem;
+}
+.sectionTitle {
+  font-family: var(--font-title);
+  color: var(--txt);
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.9rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ─── KPI cards ────────────────────────────────────────────────────────── */
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.7rem;
+  margin-bottom: 1rem;
+}
+.kpi {
+  background: var(--bg1);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+}
+.kpiValue {
+  font-family: var(--font-title);
+  font-size: 1.5rem;
+  letter-spacing: 0.03em;
+  line-height: 1.1;
+}
+.kpiLabel {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 0.45rem;
+}
+.kpiHint {
+  font-size: 0.6rem;
+  color: var(--muted);
+  margin-top: 0.25rem;
+  font-style: italic;
+}
+.tone_gold {
+  color: var(--gold);
+}
+.tone_green {
+  color: var(--green);
+}
+.tone_red {
+  color: var(--red);
+}
+.tone_blue {
+  color: var(--blue);
+}
+.tone_purple {
+  color: var(--purple);
+}
+.tone_orange {
+  color: var(--orange);
+}
+.tone_muted {
+  color: var(--muted);
+}
+
+/* ─── Cards ────────────────────────────────────────────────────────────── */
+.card {
+  background: var(--bg1);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
+  margin-bottom: 0.85rem;
+}
+.cardTitle {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--soft);
+  margin-bottom: 0.7rem;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 0.85rem;
+  margin-bottom: 0.85rem;
+}
+
+/* ─── Coverage bars ────────────────────────────────────────────────────── */
+.coverGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.9rem;
+}
+.coverItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.coverHead {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: var(--soft);
+}
+.coverPct {
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+.coverTrack {
+  height: 8px;
+  background: var(--bg);
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.coverFill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+.coverMeta {
+  font-size: 0.6rem;
+  color: var(--muted);
+}
+.good {
+  color: var(--green);
+  background: var(--green);
+}
+.warn {
+  color: var(--gold);
+  background: var(--gold);
+}
+.bad {
+  color: var(--red);
+  background: var(--red);
+}
+/* coverPct uses .good/.warn/.bad for text color; fill uses for bg.
+   Selectors above set background to the same color; for the text-only
+   element override here so it doesn't get a background. */
+.coverPct.good,
+.coverPct.warn,
+.coverPct.bad {
+  background: transparent;
+}
+
+/* ─── Content gaps ─────────────────────────────────────────────────────── */
+.gap {
+  margin-bottom: 0.7rem;
+}
+.gapTitle {
+  font-size: 0.72rem;
+  color: var(--red);
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  margin-bottom: 0.35rem;
+}
+.gapCount {
+  color: var(--muted);
+  font-weight: 600;
+}
+.gapList {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.gapList li {
+  font-size: 0.7rem;
+  color: var(--soft);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.3rem 0.55rem;
+}
+.gapMore {
+  font-style: italic;
+  color: var(--muted);
+}
+
+/* ─── Notice (RPC unavailable) ─────────────────────────────────────────── */
+.notice {
+  background: rgba(77, 158, 255, 0.08);
+  border: 1px solid rgba(77, 158, 255, 0.25);
+  color: var(--blue);
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+.notice code {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  color: var(--gold);
+}
+
+/* ─── Filters ──────────────────────────────────────────────────────────── */
+.filters {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.7rem;
+}
+.search {
+  flex: 1;
+  min-width: 200px;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  color: var(--txt);
+  border-radius: 8px;
+  padding: 0.55rem 0.8rem;
+  font-size: 0.78rem;
+  outline: none;
+}
+.search:focus {
+  border-color: var(--gold);
+}
+.chipRow {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+.chip {
+  padding: 0.35rem 0.7rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: 999px;
+  border: 1px solid var(--border2);
+  background: var(--bg2);
+  color: var(--muted);
+  cursor: pointer;
+  transition: 0.15s;
+}
+.chip:hover {
+  color: var(--soft);
+}
+.chipActive {
+  background: var(--gold);
+  color: #000;
+  border-color: var(--gold);
+}
+
+/* ─── Quality table ────────────────────────────────────────────────────── */
+.tableWrap {
+  background: var(--bg1);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  overflow: auto;
+  max-height: 600px;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.72rem;
+  min-width: 900px;
+}
+.table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--bg2);
+  color: var(--muted);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 0.62rem;
+  padding: 0.65rem 0.7rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  z-index: 1;
+}
+.thRight {
+  text-align: right !important;
+}
+.thBtn {
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.thBtn:hover {
+  color: var(--soft);
+}
+.thBtnActive {
+  color: var(--gold);
+}
+.thArrow {
+  font-size: 0.6rem;
+}
+.table tbody td {
+  padding: 0.55rem 0.7rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--soft);
+  vertical-align: middle;
+}
+.table tbody tr:hover td {
+  background: rgba(255, 255, 255, 0.03);
+}
+.cellName {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.cellId {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+.cellTrack {
+  font-size: 0.66rem;
+  color: var(--muted);
+}
+.num {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  text-align: right;
+  color: var(--txt);
+}
+.center {
+  text-align: center;
+}
+.empty {
+  text-align: center;
+  padding: 1.4rem !important;
+  color: var(--muted);
+  font-style: italic;
+}
