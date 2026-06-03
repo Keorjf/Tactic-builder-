@@ -2,13 +2,13 @@
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 440px;
+  max-width: 520px;
   margin: 0 auto;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 1.5rem;
+  padding: 2rem 1.5rem;
 }
 
 .logo {
@@ -18,14 +18,14 @@
 .logoTitle {
   font-family: var(--font-title);
   color: var(--gold);
-  font-size: 1.8rem;
+  font-size: 2.1rem;
   letter-spacing: 0.08em;
 }
 .logoSub {
   font-family: var(--font-mono);
-  font-size: 0.62rem;
+  font-size: 0.68rem;
   color: var(--muted);
-  margin-top: 0.3rem;
+  margin-top: 0.35rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -33,24 +33,49 @@
 .card {
   background: var(--bg1);
   border: 1px solid var(--border2);
-  border-radius: 18px;
-  padding: 2rem 2.2rem;
+  border-radius: 20px;
+  padding: 2.4rem 2.6rem;
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
 }
 
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: rgba(0, 232, 122, 0.08);
+  border: 1px solid rgba(0, 232, 122, 0.28);
+  color: var(--green);
+  padding: 0.32rem 0.7rem;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+.badgeDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 8px rgba(0, 232, 122, 0.7);
+}
+
 .cardHead {
-  margin-bottom: 1.6rem;
+  margin-bottom: 1.8rem;
 }
 .cardTitle {
   font-family: var(--font-title);
   color: var(--txt);
-  font-size: 1.15rem;
+  font-size: 1.45rem;
   letter-spacing: 0.02em;
 }
 .cardSub {
-  font-size: 0.72rem;
-  color: var(--muted);
-  margin-top: 0.35rem;
+  font-size: 0.78rem;
+  color: var(--soft);
+  margin-top: 0.45rem;
+  line-height: 1.5;
 }
 
 .linkBtn {
@@ -101,31 +126,31 @@
   display: block;
 }
 .fieldGroup {
-  margin-bottom: 1.1rem;
+  margin-bottom: 1.25rem;
 }
 .fieldRow {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.75rem;
-  margin-bottom: 1.1rem;
+  margin-bottom: 1.25rem;
 }
 .label {
-  font-size: 0.6rem;
+  font-size: 0.65rem;
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--muted);
   display: block;
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.45rem;
 }
 .input {
   width: 100%;
   background: var(--bg);
   border: 1px solid var(--border2);
   color: var(--txt);
-  border-radius: 9px;
-  padding: 0.65rem 0.85rem;
-  font-size: 0.8rem;
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  font-size: 0.88rem;
   outline: none;
   transition: 0.18s;
 }
@@ -219,17 +244,17 @@
 
 .submit {
   width: 100%;
-  padding: 0.8rem;
-  font-size: 0.82rem;
+  padding: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 800;
-  border-radius: 10px;
+  border-radius: 11px;
   border: none;
   background: var(--gold);
   color: #000;
   cursor: pointer;
   transition: 0.18s;
-  letter-spacing: 0.03em;
-  margin-top: 0.5rem;
+  letter-spacing: 0.04em;
+  margin-top: 0.75rem;
 }
 .submit:hover {
   filter: brightness(1.08);
@@ -324,14 +349,18 @@
 
 .note {
   text-align: center;
-  margin-top: 1.5rem;
-  font-size: 0.62rem;
+  margin-top: 1.6rem;
+  font-size: 0.68rem;
+  line-height: 1.5;
   color: var(--muted);
 }
 
-@media (max-width: 480px) {
+@media (max-width: 540px) {
   .card {
-    padding: 1.5rem 1.3rem;
+    padding: 1.7rem 1.4rem;
+  }
+  .cardTitle {
+    font-size: 1.25rem;
   }
   .fieldRow,
   .roleGrid {

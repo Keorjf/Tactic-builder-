@@ -118,21 +118,25 @@ export default function AuthView() {
     <div className={styles.wrap}>
       <div className={styles.logo}>
         <div className={styles.logoTitle}>TACTIC</div>
-        <div className={styles.logoSub}>Corpus Builder — Admin</div>
+        <div className={styles.logoSub}>Corpus Builder</div>
       </div>
 
       <div className={styles.card}>
+        <div className={styles.badge}>
+          <span className={styles.badgeDot} />
+          Admin Dashboard
+        </div>
         <div className={styles.cardHead}>
           <div className={styles.cardTitle}>
             {mode === 'login'
-              ? 'Sign in'
+              ? 'Welcome back'
               : mode === 'forgot'
               ? 'Reset password'
               : 'Set a new password'}
           </div>
           <div className={styles.cardSub}>
             {mode === 'login'
-              ? 'Administrator access only.'
+              ? 'Sign in to manage lessons, content and users.'
               : mode === 'forgot'
               ? "We'll email you a secure reset link."
               : 'Choose a new password for your account.'}

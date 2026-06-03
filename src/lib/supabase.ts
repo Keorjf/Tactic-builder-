@@ -27,6 +27,17 @@ if (!isSupabaseConfigured && import.meta.env.DEV) {
   );
 }
 
+/**
+ * Browser localStorage key used to persist the session.
+ *
+ * supabase-js stores the JWT + refresh token here. With `persistSession`
+ * + `autoRefreshToken` enabled, the short-lived JWT (default ~1 h) is
+ * silently swapped for a fresh one using the longer-lived refresh token
+ * (default 30 days). So the admin stays signed in across reloads/days
+ * without re-entering credentials.
+ */
+export const AUTH_STORAGE_KEY = 'tactic-builder.auth';
+
 export const supabase = createClient(
   SUPABASE_URL ?? 'http://localhost',
   SUPABASE_ANON_KEY ?? 'public-anon-key',
@@ -36,6 +47,14 @@ export const supabase = createClient(
       autoRefreshToken: true,
       // true so the password-reset email redirect can pick up the session.
       detectSessionInUrl: true,
+      storageKey: AUTH_STORAGE_KEY,
+      // Explicit so it's visible / auditable instead of relying on the
+      // library's implicit default. Falls back to an in-memory store on
+      // platforms without localStorage (very old browsers, SSR).
+      storage:
+        typeof window !== 'undefined' && window.localStorage
+          ? window.localStorage
+          : undefined,
     },
   }
 );

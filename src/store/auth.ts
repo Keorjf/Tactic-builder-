@@ -55,9 +55,14 @@ export const useAuth = create<AuthState>((set, get) => ({
       })
       .finally(() => set({ loading: false }));
 
-    supabase.auth.onAuthStateChange((_event, session) => {
+    supabase.auth.onAuthStateChange((event, session) => {
       set({ session });
-      get().refreshProfile();
+      // The session's `user.id` is what gates `isAdmin`. A silent
+      // TOKEN_REFRESHED rotates the JWT but the user/profile is
+      // unchanged — skip the extra `profiles` round-trip in that case.
+      if (event !== 'TOKEN_REFRESHED') {
+        get().refreshProfile();
+      }
     });
   },
 
