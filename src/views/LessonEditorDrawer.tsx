@@ -3,8 +3,9 @@ import Drawer from '@/components/Drawer';
 import BlockEditor from '@/components/BlockEditor';
 import QuizEditor from '@/components/QuizEditor';
 import { useCorpus, newLessonId } from '@/store/corpus';
-import { LEVELS, TAGS, type Block, type BlockType, type Lesson, type Quiz } from '@/lib/types';
+import { LEVELS, TAGS, type Block, type BlockType, type Lesson, type Quiz, type Translation } from '@/lib/types';
 import { toast } from '@/components/Toast';
+import { aiGenerateContent, aiTranslate } from '@/lib/ai';
 import styles from './LessonEditorDrawer.module.css';
 
 const DURATIONS = ['1 min', '2 min', '3 min', '5 min'];
@@ -43,6 +44,7 @@ export default function LessonEditorDrawer() {
 
   const [form, setForm] = useState<Lesson>(blankLesson());
   const [busy, setBusy] = useState(false);
+  const [aiBusy, setAiBusy] = useState<null | 'generate' | 'translate'>(null);
   // Inline "new module" mini-form (replaces browser prompts).
   const [newTrack, setNewTrack] = useState<{ name: string; emoji: string } | null>(null);
   const isEdit = !!editing;
@@ -123,6 +125,71 @@ export default function LessonEditorDrawer() {
       patch({ trackId: track.id });
       setNewTrack(null);
     }
+  };
+
+  const onGenerate = async () => {
+    if (!form.name.trim()) {
+      toast('Set a lesson title first — the AI uses it as the brief.', 'error');
+      return;
+    }
+    if (form.blocks.length > 0 || (form.quizzes[0]?.q?.trim())) {
+      if (
+        !window.confirm(
+          'Generating will replace the current blocks and the first quiz. Continue?'
+        )
+      ) {
+        return;
+      }
+    }
+    setAiBusy('generate');
+    const track = tracks.find((t) => t.id === form.trackId);
+    const res = await aiGenerateContent({
+      name: form.name,
+      level: form.level,
+      tag: form.tag,
+      track: track ? `${track.emoji} ${track.nameFr}` : undefined,
+      duration: form.duration,
+    });
+    setAiBusy(null);
+    if (!res.ok) {
+      toast(`Generate failed: ${res.error}`, 'error');
+      return;
+    }
+    const { blocks, quiz } = res.data;
+    setForm((f) => ({
+      ...f,
+      blocks: Array.isArray(blocks) ? (blocks as Block[]) : f.blocks,
+      quizzes: quiz ? [quiz, ...f.quizzes.slice(1)] : f.quizzes,
+    }));
+    toast('Lesson draft generated.', 'success');
+  };
+
+  const onTranslate = async () => {
+    if (form.blocks.length === 0) {
+      toast('Add some French content first — there is nothing to translate.', 'error');
+      return;
+    }
+    setAiBusy('translate');
+    const res = await aiTranslate({
+      langs: ['en', 'es'],
+      lesson: { title: form.name, blocks: form.blocks, quizzes: form.quizzes },
+    });
+    setAiBusy(null);
+    if (!res.ok) {
+      toast(`Translate failed: ${res.error}`, 'error');
+      return;
+    }
+    const en = res.data.en as Translation | undefined;
+    const es = res.data.es as Translation | undefined;
+    setForm((f) => ({
+      ...f,
+      translations: {
+        ...f.translations,
+        ...(en ? { en } : {}),
+        ...(es ? { es } : {}),
+      },
+    }));
+    toast('Translations saved (EN + ES).', 'success');
   };
 
   const onSave = async () => {
@@ -312,6 +379,38 @@ export default function LessonEditorDrawer() {
             <option value="draft">Draft</option>
           </select>
         </Field>
+      </div>
+
+      {/* AI helpers */}
+      <div className={styles.aiBar}>
+        <div className={styles.aiBarTitle}>AI helpers</div>
+        <div className={styles.aiBarBody}>
+          <button
+            type="button"
+            className={`${styles.aiBtn} ${styles.aiBtnPrimary}`}
+            onClick={() => void onGenerate()}
+            disabled={aiBusy !== null}
+            title="Draft hook + content + tip + quiz from the lesson title"
+          >
+            {aiBusy === 'generate' ? 'Generating…' : '✨ Generate draft (FR)'}
+          </button>
+          <button
+            type="button"
+            className={styles.aiBtn}
+            onClick={() => void onTranslate()}
+            disabled={aiBusy !== null}
+            title="Translate FR → EN + ES, saved in lesson.translations"
+          >
+            {aiBusy === 'translate' ? 'Translating…' : '🌐 Translate EN + ES'}
+          </button>
+          {(form.translations?.en || form.translations?.es) ? (
+            <span className={styles.aiBadge}>
+              {form.translations?.en ? 'EN ✓' : ''}
+              {form.translations?.en && form.translations?.es ? ' · ' : ''}
+              {form.translations?.es ? 'ES ✓' : ''}
+            </span>
+          ) : null}
+        </div>
       </div>
 
       {/* Blocks */}

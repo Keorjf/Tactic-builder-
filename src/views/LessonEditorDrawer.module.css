@@ -46,6 +46,67 @@
   color: var(--soft);
 }
 
+.aiBar {
+  margin: 1.2rem 0 0.4rem;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(167, 139, 250, 0.08), rgba(77, 158, 255, 0.05));
+  border: 1px solid rgba(167, 139, 250, 0.25);
+}
+.aiBarTitle {
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--purple);
+  margin-bottom: 0.55rem;
+}
+.aiBarBody {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+.aiBtn {
+  padding: 0.55rem 0.9rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border-radius: 8px;
+  border: 1px solid var(--border2);
+  background: var(--bg2);
+  color: var(--soft);
+  cursor: pointer;
+  transition: 0.15s;
+}
+.aiBtn:hover:not(:disabled) {
+  border-color: var(--purple);
+  color: var(--purple);
+}
+.aiBtn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.aiBtnPrimary {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #000;
+}
+.aiBtnPrimary:hover:not(:disabled) {
+  filter: brightness(1.08);
+  color: #000;
+  border-color: var(--gold);
+}
+.aiBadge {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--green);
+  padding: 0.25rem 0.55rem;
+  background: rgba(0, 232, 122, 0.08);
+  border: 1px solid rgba(0, 232, 122, 0.25);
+  border-radius: 6px;
+  margin-left: auto;
+}
+
 .section {
   margin: 1.2rem 0;
   padding-top: 1rem;
