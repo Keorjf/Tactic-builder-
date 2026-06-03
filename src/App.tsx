@@ -8,7 +8,9 @@ import AuthView from '@/views/AuthView';
 import ExploreView from '@/views/ExploreView';
 import ExportView from '@/views/ExportView';
 import StatsView from '@/views/StatsView';
-import Placeholder from '@/views/Placeholder';
+import IdeasView from '@/views/IdeasView';
+import AgentsView from '@/views/AgentsView';
+import MarketingView from '@/views/MarketingView';
 
 export default function App() {
   const init = useAuth((s) => s.init);
@@ -28,11 +30,11 @@ export default function App() {
         >
           <Route index element={<Navigate to="/explore" replace />} />
           <Route path="/explore" element={<ExploreView />} />
-          <Route path="/ideas" element={<Placeholder title="Lesson Ideas" phase="Phase 6" />} />
+          <Route path="/ideas" element={<IdeasView />} />
           <Route path="/export" element={<ExportView />} />
           <Route path="/stats" element={<StatsView />} />
-          <Route path="/marketing" element={<Placeholder title="Marketing" phase="Phase 6" />} />
-          <Route path="/agents" element={<Placeholder title="AI Agents" phase="Phase 6" />} />
+          <Route path="/marketing" element={<MarketingView />} />
+          <Route path="/agents" element={<AgentsView />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/explore" replace />} />

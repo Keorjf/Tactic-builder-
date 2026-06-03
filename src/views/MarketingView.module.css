@@ -1,0 +1,152 @@
+.wrap {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0.5rem 0 3rem;
+}
+.head {
+  margin-bottom: 1.4rem;
+}
+.title {
+  font-family: var(--font-title);
+  color: var(--gold);
+  font-size: 1.4rem;
+  letter-spacing: 0.04em;
+}
+.sub {
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+.controls {
+  background: var(--bg1);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
+  margin-bottom: 1.4rem;
+  display: flex;
+  gap: 0.8rem;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+.label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  flex: 1;
+  min-width: 200px;
+}
+.runBtn {
+  padding: 0.7rem 1.2rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  border-radius: 10px;
+  border: none;
+  background: var(--gold);
+  color: #000;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: 0.15s;
+  letter-spacing: 0.04em;
+}
+.runBtn:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+.runBtn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.results {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.85rem;
+}
+
+.section {
+  background: var(--bg1);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
+}
+.sectionTitle {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--soft);
+  margin-bottom: 0.7rem;
+}
+.list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+.item,
+.itemMulti {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.78rem;
+  color: var(--txt);
+}
+.itemMulti {
+  align-items: flex-start;
+}
+.itemText {
+  flex: 1;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+.copyBtn {
+  padding: 0.32rem 0.65rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  border-radius: 6px;
+  border: 1px solid var(--border2);
+  background: var(--bg2);
+  color: var(--muted);
+  cursor: pointer;
+  transition: 0.15s;
+}
+.copyBtn:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.cta {
+  background: var(--bg1);
+  border: 1px solid rgba(255, 205, 13, 0.4);
+  border-radius: 12px;
+  padding: 1.2rem 1.4rem;
+  text-align: center;
+  position: relative;
+}
+.ctaLabel {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.55rem;
+}
+.ctaValue {
+  font-family: var(--font-title);
+  font-size: 1.4rem;
+  letter-spacing: 0.02em;
+  color: var(--gold);
+}
+.cta .copyBtn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+}

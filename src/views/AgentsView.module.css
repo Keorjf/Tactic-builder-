@@ -1,0 +1,236 @@
+.wrap {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0.5rem 0 3rem;
+}
+.head {
+  margin-bottom: 1.4rem;
+}
+.title {
+  font-family: var(--font-title);
+  color: var(--gold);
+  font-size: 1.4rem;
+  letter-spacing: 0.04em;
+}
+.sub {
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+.body {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 1rem;
+}
+
+/* Sidebar */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.agentTab {
+  text-align: left;
+  background: var(--bg1);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 0.75rem 0.9rem;
+  cursor: pointer;
+  transition: 0.15s;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.agentTab:hover {
+  border-color: var(--purple);
+}
+.agentTabActive {
+  border-color: var(--gold);
+  background: rgba(255, 205, 13, 0.05);
+}
+.agentName {
+  font-weight: 800;
+  color: var(--txt);
+  font-size: 0.82rem;
+}
+.agentMission {
+  font-size: 0.66rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+.agentStatus {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--gold);
+  margin-top: 0.2rem;
+}
+
+/* Detail */
+.detail {
+  background: var(--bg1);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 1.2rem 1.3rem;
+  min-height: 480px;
+}
+.detailHead {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.detailTitle {
+  font-family: var(--font-title);
+  color: var(--gold);
+  font-size: 1.05rem;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.45rem;
+}
+.detailMission {
+  font-size: 0.78rem;
+  color: var(--soft);
+  line-height: 1.55;
+}
+.runBtn {
+  padding: 0.6rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  border-radius: 9px;
+  border: none;
+  background: var(--gold);
+  color: #000;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: 0.15s;
+  letter-spacing: 0.04em;
+}
+.runBtn:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+.runBtn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.error {
+  background: rgba(255, 59, 92, 0.08);
+  border: 1px solid rgba(255, 59, 92, 0.25);
+  color: var(--red);
+  padding: 0.8rem 1rem;
+  border-radius: 9px;
+  font-size: 0.78rem;
+}
+
+.empty {
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  background: var(--bg);
+  border: 1px dashed var(--border2);
+  border-radius: 12px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+.empty strong {
+  color: var(--gold);
+}
+
+/* Report */
+.report {
+  display: flex;
+  flex-direction: column;
+  gap: 1.3rem;
+}
+.reportSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+.reportTitle {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.findingList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.findingList li {
+  background: var(--bg);
+  border-left: 3px solid var(--gold);
+  border-radius: 6px;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.78rem;
+  color: var(--txt);
+  line-height: 1.55;
+}
+
+.subSection {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 0.85rem 1rem;
+  margin-bottom: 0.55rem;
+}
+.subTitle {
+  font-weight: 800;
+  font-size: 0.78rem;
+  color: var(--gold);
+  margin-bottom: 0.45rem;
+}
+.subContent {
+  font-size: 0.76rem;
+  color: var(--soft);
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.lessonGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.55rem;
+}
+.lessonCard {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 0.7rem 0.85rem;
+}
+.lessonName {
+  font-weight: 700;
+  font-size: 0.78rem;
+  color: var(--txt);
+  margin-bottom: 0.3rem;
+}
+.lessonRationale {
+  font-size: 0.68rem;
+  color: var(--soft);
+  line-height: 1.5;
+}
+.lessonId {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  color: var(--muted);
+  margin-top: 0.35rem;
+}
+
+/* Responsive */
+@media (max-width: 800px) {
+  .body {
+    grid-template-columns: 1fr;
+  }
+  .sidebar {
+    flex-direction: row;
+    overflow-x: auto;
+  }
+  .agentTab {
+    min-width: 220px;
+    flex-shrink: 0;
+  }
+}
