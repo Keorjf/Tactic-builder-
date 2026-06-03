@@ -38,6 +38,39 @@
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
 }
 
+.cardHead {
+  margin-bottom: 1.6rem;
+}
+.cardTitle {
+  font-family: var(--font-title);
+  color: var(--txt);
+  font-size: 1.15rem;
+  letter-spacing: 0.02em;
+}
+.cardSub {
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-top: 0.35rem;
+}
+
+.linkBtn {
+  display: block;
+  width: 100%;
+  text-align: center;
+  margin-top: 0.9rem;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: 0.15s;
+}
+.linkBtn:hover {
+  color: var(--gold);
+}
+
 .tabs {
   display: flex;
   background: var(--bg);

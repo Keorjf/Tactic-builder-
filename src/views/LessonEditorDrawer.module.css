@@ -13,6 +13,39 @@
   grid-column: 1 / -1;
 }
 
+.newTrack {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  margin-top: 0.5rem;
+}
+.newTrackAdd {
+  padding: 0.5rem 0.9rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  border-radius: 8px;
+  border: none;
+  background: var(--gold);
+  color: #000;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.newTrackAdd:hover {
+  filter: brightness(1.08);
+}
+.newTrackCancel {
+  padding: 0.5rem 0.6rem;
+  font-size: 0.72rem;
+  border-radius: 8px;
+  border: 1px solid var(--border2);
+  background: var(--bg2);
+  color: var(--muted);
+  cursor: pointer;
+}
+.newTrackCancel:hover {
+  color: var(--soft);
+}
+
 .section {
   margin: 1.2rem 0;
   padding-top: 1rem;

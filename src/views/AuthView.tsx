@@ -1,18 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/store/auth';
-import type { AdminRole } from '@/lib/types';
 import styles from './AuthView.module.css';
 
-type Tab = 'login' | 'register';
+type Mode = 'login' | 'forgot' | 'reset';
 type Alert = { msg: string; type: 'error' | 'success' } | null;
-
-/** Self-service roles (admin is granted out-of-band via SQL). */
-const ROLES: { value: Exclude<AdminRole, 'admin' | 'learner'>; label: string; sub: string }[] = [
-  { value: 'ux', label: 'UX Designer', sub: 'Learner experience' },
-  { value: 'ped', label: 'Instructional Designer', sub: 'Content design' },
-  { value: 'data', label: 'Data Analyst', sub: 'Analytics & KPIs' },
-];
 
 function pwStrength(v: string): { pct: number; color: string } {
   let score = 0;
@@ -26,41 +19,53 @@ function pwStrength(v: string): { pct: number; color: string } {
   return { pct, color };
 }
 
+/**
+ * Admin login. No public registration — admin accounts are provisioned by
+ * an existing administrator (Supabase dashboard + role grant). Supports the
+ * forgot-password request and the reset-password completion flow (when the
+ * user arrives from a recovery email).
+ */
 export default function AuthView() {
   const navigate = useNavigate();
-  const { signIn, signUp, resetPassword } = useAuth();
+  const { signIn, resetPassword, updatePassword } = useAuth();
 
-  const [tab, setTab] = useState<Tab>('login');
+  const [mode, setMode] = useState<Mode>('login');
   const [alert, setAlert] = useState<Alert>(null);
   const [busy, setBusy] = useState(false);
 
-  // Login fields
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginPw, setLoginPw] = useState('');
-  const [showLoginPw, setShowLoginPw] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPw, setShowPw] = useState(false);
 
-  // Register fields
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [regEmail, setRegEmail] = useState('');
-  const [regPw, setRegPw] = useState('');
-  const [regPwConfirm, setRegPwConfirm] = useState('');
-  const [showRegPw, setShowRegPw] = useState(false);
-  const [role, setRole] = useState<(typeof ROLES)[number]['value']>('ux');
-  const [terms, setTerms] = useState(false);
+  const [newPw, setNewPw] = useState('');
+  const [newPwConfirm, setNewPwConfirm] = useState('');
 
-  const strength = useMemo(() => pwStrength(regPw), [regPw]);
-  const pwMismatch = regPwConfirm.length > 0 && regPwConfirm !== regPw;
+  const strength = useMemo(() => pwStrength(newPw), [newPw]);
+  const pwMismatch = newPwConfirm.length > 0 && newPwConfirm !== newPw;
+
+  // Detect arrival from a password-recovery email → switch to reset mode.
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const isRecovery =
+      url.searchParams.get('reset') === '1' ||
+      window.location.hash.includes('type=recovery');
+    if (isRecovery) setMode('reset');
+
+    const { data } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') setMode('reset');
+    });
+    return () => data.subscription.unsubscribe();
+  }, []);
 
   const onLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setAlert(null);
-    if (!loginEmail || !loginPw) {
+    if (!email || !password) {
       setAlert({ msg: 'Please fill in all fields.', type: 'error' });
       return;
     }
     setBusy(true);
-    const res = await signIn(loginEmail, loginPw);
+    const res = await signIn(email, password);
     setBusy(false);
     if (!res.ok) {
       setAlert({ msg: res.error, type: 'error' });
@@ -69,48 +74,44 @@ export default function AuthView() {
     navigate('/explore', { replace: true });
   };
 
-  const onRegister = async (e: React.FormEvent) => {
+  const onForgot = async (e: React.FormEvent) => {
     e.preventDefault();
     setAlert(null);
-    if (regPw !== regPwConfirm) {
-      setAlert({ msg: 'Passwords do not match.', type: 'error' });
-      return;
-    }
-    if (regPw.length < 8) {
-      setAlert({ msg: 'Password must be at least 8 characters.', type: 'error' });
-      return;
-    }
-    if (!terms) {
-      setAlert({ msg: 'Please accept the terms of service.', type: 'error' });
+    if (!email) {
+      setAlert({ msg: 'Enter your email to receive a reset link.', type: 'error' });
       return;
     }
     setBusy(true);
-    const res = await signUp({ email: regEmail, password: regPw, firstName, lastName, role });
+    const redirectTo = `${window.location.origin}/auth?reset=1`;
+    const res = await resetPassword(email, redirectTo);
+    setBusy(false);
+    setAlert(
+      res.ok
+        ? { msg: `If an account exists for ${email}, a reset link is on its way.`, type: 'success' }
+        : { msg: res.error, type: 'error' }
+    );
+  };
+
+  const onReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAlert(null);
+    if (newPw.length < 8) {
+      setAlert({ msg: 'Password must be at least 8 characters.', type: 'error' });
+      return;
+    }
+    if (newPw !== newPwConfirm) {
+      setAlert({ msg: 'Passwords do not match.', type: 'error' });
+      return;
+    }
+    setBusy(true);
+    const res = await updatePassword(newPw);
     setBusy(false);
     if (!res.ok) {
       setAlert({ msg: res.error, type: 'error' });
       return;
     }
-    setAlert({
-      msg: 'Account created. Check your inbox to confirm, then sign in.',
-      type: 'success',
-    });
-    setTab('login');
-  };
-
-  const onForgot = async () => {
-    setAlert(null);
-    if (!loginEmail) {
-      setAlert({ msg: 'Enter your email to reset your password.', type: 'error' });
-      return;
-    }
-    const redirectTo = `${window.location.origin}/auth?reset=1`;
-    const res = await resetPassword(loginEmail, redirectTo);
-    setAlert(
-      res.ok
-        ? { msg: `Reset link sent to ${loginEmail}.`, type: 'success' }
-        : { msg: res.error, type: 'error' }
-    );
+    setAlert({ msg: 'Password updated. Redirecting…', type: 'success' });
+    setTimeout(() => navigate('/explore', { replace: true }), 1200);
   };
 
   return (
@@ -121,32 +122,28 @@ export default function AuthView() {
       </div>
 
       <div className={styles.card}>
-        <div className={styles.tabs}>
-          <button
-            className={`${styles.tab} ${tab === 'login' ? styles.tabActive : ''}`}
-            onClick={() => {
-              setTab('login');
-              setAlert(null);
-            }}
-          >
-            Sign in
-          </button>
-          <button
-            className={`${styles.tab} ${tab === 'register' ? styles.tabActive : ''}`}
-            onClick={() => {
-              setTab('register');
-              setAlert(null);
-            }}
-          >
-            Register
-          </button>
+        <div className={styles.cardHead}>
+          <div className={styles.cardTitle}>
+            {mode === 'login'
+              ? 'Sign in'
+              : mode === 'forgot'
+              ? 'Reset password'
+              : 'Set a new password'}
+          </div>
+          <div className={styles.cardSub}>
+            {mode === 'login'
+              ? 'Administrator access only.'
+              : mode === 'forgot'
+              ? "We'll email you a secure reset link."
+              : 'Choose a new password for your account.'}
+          </div>
         </div>
 
         {alert ? (
           <div className={`${styles.alert} ${styles[alert.type]}`}>{alert.msg}</div>
         ) : null}
 
-        {tab === 'login' ? (
+        {mode === 'login' ? (
           <form className={styles.form} onSubmit={onLogin}>
             <div className={styles.fieldGroup}>
               <label className={styles.label}>Email address</label>
@@ -155,70 +152,50 @@ export default function AuthView() {
                 type="email"
                 placeholder="you@example.com"
                 autoComplete="email"
-                value={loginEmail}
-                onChange={(e) => setLoginEmail(e.target.value)}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
-
             <div className={styles.fieldGroup}>
               <label className={styles.label}>
                 Password
-                <button type="button" className={styles.forgot} onClick={onForgot}>
+                <button
+                  type="button"
+                  className={styles.forgot}
+                  onClick={() => {
+                    setAlert(null);
+                    setMode('forgot');
+                  }}
+                >
                   Forgot password?
                 </button>
               </label>
               <div className={styles.pwWrap}>
                 <input
                   className={styles.input}
-                  type={showLoginPw ? 'text' : 'password'}
+                  type={showPw ? 'text' : 'password'}
                   placeholder="••••••••"
                   autoComplete="current-password"
-                  value={loginPw}
-                  onChange={(e) => setLoginPw(e.target.value)}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   required
                 />
                 <button
                   type="button"
                   className={styles.pwToggle}
-                  onClick={() => setShowLoginPw((v) => !v)}
+                  onClick={() => setShowPw((v) => !v)}
                 >
-                  {showLoginPw ? '🙈' : '👁'}
+                  {showPw ? '🙈' : '👁'}
                 </button>
               </div>
             </div>
-
             <button type="submit" className={styles.submit} disabled={busy}>
               {busy ? 'Signing in…' : 'Sign in'}
             </button>
           </form>
-        ) : (
-          <form className={styles.form} onSubmit={onRegister}>
-            <div className={styles.fieldRow}>
-              <div>
-                <label className={styles.label}>First name</label>
-                <input
-                  className={styles.input}
-                  type="text"
-                  placeholder="Marie"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  required
-                />
-              </div>
-              <div>
-                <label className={styles.label}>Last name</label>
-                <input
-                  className={styles.input}
-                  type="text"
-                  placeholder="Dupont"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-
+        ) : mode === 'forgot' ? (
+          <form className={styles.form} onSubmit={onForgot}>
             <div className={styles.fieldGroup}>
               <label className={styles.label}>Email address</label>
               <input
@@ -226,30 +203,45 @@ export default function AuthView() {
                 type="email"
                 placeholder="you@example.com"
                 autoComplete="email"
-                value={regEmail}
-                onChange={(e) => setRegEmail(e.target.value)}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
-
+            <button type="submit" className={styles.submit} disabled={busy}>
+              {busy ? 'Sending…' : 'Send reset link'}
+            </button>
+            <button
+              type="button"
+              className={styles.linkBtn}
+              onClick={() => {
+                setAlert(null);
+                setMode('login');
+              }}
+            >
+              ← Back to sign in
+            </button>
+          </form>
+        ) : (
+          <form className={styles.form} onSubmit={onReset}>
             <div className={styles.fieldGroup}>
-              <label className={styles.label}>Password</label>
+              <label className={styles.label}>New password</label>
               <div className={styles.pwWrap}>
                 <input
                   className={styles.input}
-                  type={showRegPw ? 'text' : 'password'}
+                  type={showPw ? 'text' : 'password'}
                   placeholder="Min. 8 characters"
                   autoComplete="new-password"
-                  value={regPw}
-                  onChange={(e) => setRegPw(e.target.value)}
+                  value={newPw}
+                  onChange={(e) => setNewPw(e.target.value)}
                   required
                 />
                 <button
                   type="button"
                   className={styles.pwToggle}
-                  onClick={() => setShowRegPw((v) => !v)}
+                  onClick={() => setShowPw((v) => !v)}
                 >
-                  {showRegPw ? '🙈' : '👁'}
+                  {showPw ? '🙈' : '👁'}
                 </button>
               </div>
               <div className={styles.strength}>
@@ -259,88 +251,31 @@ export default function AuthView() {
                 />
               </div>
             </div>
-
             <div className={styles.fieldGroup}>
-              <label className={styles.label}>Confirm password</label>
-              <div className={styles.pwWrap}>
-                <input
-                  className={`${styles.input} ${pwMismatch ? styles.inputError : ''}`}
-                  type={showRegPw ? 'text' : 'password'}
-                  placeholder="••••••••"
-                  autoComplete="new-password"
-                  value={regPwConfirm}
-                  onChange={(e) => setRegPwConfirm(e.target.value)}
-                  required
-                />
-              </div>
+              <label className={styles.label}>Confirm new password</label>
+              <input
+                className={`${styles.input} ${pwMismatch ? styles.inputError : ''}`}
+                type={showPw ? 'text' : 'password'}
+                placeholder="••••••••"
+                autoComplete="new-password"
+                value={newPwConfirm}
+                onChange={(e) => setNewPwConfirm(e.target.value)}
+                required
+              />
               {pwMismatch ? (
                 <div className={styles.fieldError}>Passwords do not match.</div>
               ) : null}
             </div>
-
-            <div className={styles.fieldGroup}>
-              <label className={styles.label} style={{ marginBottom: '0.55rem' }}>
-                Role
-              </label>
-              <div className={styles.roleGrid}>
-                {ROLES.map((r) => (
-                  <label
-                    key={r.value}
-                    className={`${styles.roleCard} ${role === r.value ? styles.roleSelected : ''}`}
-                  >
-                    <input
-                      type="radio"
-                      name="role"
-                      value={r.value}
-                      checked={role === r.value}
-                      onChange={() => setRole(r.value)}
-                    />
-                    <div>
-                      <div className={styles.roleLabel}>{r.label}</div>
-                      <div className={styles.roleSub}>{r.sub}</div>
-                    </div>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div className={styles.fieldGroup} style={{ marginBottom: '1.4rem' }}>
-              <label className={styles.check}>
-                <input
-                  type="checkbox"
-                  checked={terms}
-                  onChange={(e) => setTerms(e.target.checked)}
-                  required
-                />
-                <span>
-                  I accept the <a href="#">terms of service</a> and{' '}
-                  <a href="#">privacy policy</a>.
-                </span>
-              </label>
-            </div>
-
             <button type="submit" className={styles.submit} disabled={busy}>
-              {busy ? 'Creating…' : 'Create my account'}
+              {busy ? 'Updating…' : 'Update password'}
             </button>
           </form>
         )}
-
-        <div className={styles.switch}>
-          {tab === 'login' ? (
-            <>
-              No account yet?{' '}
-              <button onClick={() => setTab('register')}>Register</button>
-            </>
-          ) : (
-            <>
-              Already have an account?{' '}
-              <button onClick={() => setTab('login')}>Sign in</button>
-            </>
-          )}
-        </div>
       </div>
 
-      <div className={styles.note}>Admin access is granted by an existing administrator.</div>
+      <div className={styles.note}>
+        Need access? Ask an existing administrator to create your account.
+      </div>
     </div>
   );
 }

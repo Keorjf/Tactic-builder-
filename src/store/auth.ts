@@ -21,22 +21,12 @@ type AuthState = {
   refreshProfile: () => Promise<void>;
 
   signIn: (email: string, password: string) => Promise<AuthResult>;
-  signUp: (input: SignUpInput) => Promise<AuthResult>;
   signOut: () => Promise<void>;
   resetPassword: (email: string, redirectTo?: string) => Promise<AuthResult>;
   updatePassword: (password: string) => Promise<AuthResult>;
 };
 
 export type AuthResult = { ok: true } | { ok: false; error: string };
-
-export type SignUpInput = {
-  email: string;
-  password: string;
-  firstName?: string;
-  lastName?: string;
-  /** Self-service roles only — `admin` is granted out-of-band via SQL. */
-  role?: Exclude<AdminRole, 'admin'>;
-};
 
 type ProfileRow = {
   id: string;
@@ -112,24 +102,6 @@ export const useAuth = create<AuthState>((set, get) => ({
     });
     if (error) return { ok: false, error: error.message };
     await get().refreshProfile();
-    return { ok: true };
-  },
-
-  signUp: async ({ email, password, firstName, lastName, role }) => {
-    const fullName = `${firstName ?? ''} ${lastName ?? ''}`.trim() || undefined;
-    const { error } = await supabase.auth.signUp({
-      email: email.trim(),
-      password,
-      options: {
-        data: {
-          full_name: fullName,
-          // role is stored in metadata; an admin can promote later. Public
-          // signups never get 'admin'.
-          requested_role: role ?? 'ux',
-        },
-      },
-    });
-    if (error) return { ok: false, error: error.message };
     return { ok: true };
   },
 

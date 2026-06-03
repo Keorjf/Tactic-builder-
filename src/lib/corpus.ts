@@ -135,6 +135,14 @@ export async function deleteResource(id: string): Promise<void> {
 export function corpusErrorMessage(err: unknown): string {
   const e = err as { message?: string; code?: string } | null;
   if (!e) return 'Unknown error';
+  // Corpus tables not created yet → point the admin at the migration.
+  if (
+    e.code === 'PGRST205' ||
+    e.code === '42P01' ||
+    /could not find the table|relation .* does not exist/i.test(e.message ?? '')
+  ) {
+    return 'Corpus tables not found — run the 0002_corpus_admin.sql migration first.';
+  }
   if (e.code === '42501' || /row-level security/i.test(e.message ?? '')) {
     return 'Permission denied — admin role required.';
   }

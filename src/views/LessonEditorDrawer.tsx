@@ -43,6 +43,8 @@ export default function LessonEditorDrawer() {
 
   const [form, setForm] = useState<Lesson>(blankLesson());
   const [busy, setBusy] = useState(false);
+  // Inline "new module" mini-form (replaces browser prompts).
+  const [newTrack, setNewTrack] = useState<{ name: string; emoji: string } | null>(null);
   const isEdit = !!editing;
 
   // Seed the form when the drawer opens.
@@ -88,10 +90,13 @@ export default function LessonEditorDrawer() {
   const deleteQuiz = (i: number) =>
     setForm((f) => ({ ...f, quizzes: f.quizzes.filter((_, k) => k !== i) }));
 
-  const onNewTrack = async () => {
-    const name = window.prompt('New module name (without emoji):');
-    if (!name?.trim()) return;
-    const emoji = window.prompt('Emoji for the module:', '📚') || '📚';
+  const createTrack = async () => {
+    const name = newTrack?.name.trim();
+    if (!name) {
+      toast('Module name is required.', 'error');
+      return;
+    }
+    const emoji = newTrack?.emoji.trim() || '📚';
     const id = name
       .toLowerCase()
       .normalize('NFD')
@@ -99,14 +104,25 @@ export default function LessonEditorDrawer() {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '')
       .slice(0, 40);
+    if (!id) {
+      toast('Module name must contain letters or numbers.', 'error');
+      return;
+    }
+    if (tracks.some((t) => t.id === id)) {
+      toast('A module with that name already exists.', 'error');
+      return;
+    }
     const track = await saveTrack({
       id,
       emoji,
-      nameFr: name.trim(),
+      nameFr: name,
       level: form.level,
       sortOrder: tracks.length,
     });
-    if (track) patch({ trackId: track.id });
+    if (track) {
+      patch({ trackId: track.id });
+      setNewTrack(null);
+    }
   };
 
   const onSave = async () => {
@@ -157,10 +173,13 @@ export default function LessonEditorDrawer() {
         <Field label="Module / Track">
           <select
             className="app-select"
-            value={form.trackId ?? ''}
+            value={newTrack ? '__new__' : form.trackId ?? ''}
             onChange={(e) => {
-              if (e.target.value === '__new__') void onNewTrack();
-              else patch({ trackId: e.target.value || null });
+              if (e.target.value === '__new__') setNewTrack({ name: '', emoji: '📚' });
+              else {
+                setNewTrack(null);
+                patch({ trackId: e.target.value || null });
+              }
             }}
           >
             <option value="">— None —</option>
@@ -171,6 +190,47 @@ export default function LessonEditorDrawer() {
             ))}
             <option value="__new__">+ New module…</option>
           </select>
+
+          {newTrack ? (
+            <div className={styles.newTrack}>
+              <input
+                className="app-input"
+                style={{ width: 64, textAlign: 'center' }}
+                value={newTrack.emoji}
+                maxLength={4}
+                aria-label="Module emoji"
+                onChange={(e) => setNewTrack((t) => t && { ...t, emoji: e.target.value })}
+              />
+              <input
+                className="app-input"
+                style={{ flex: 1 }}
+                placeholder="New module name"
+                value={newTrack.name}
+                autoFocus
+                onChange={(e) => setNewTrack((t) => t && { ...t, name: e.target.value })}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    void createTrack();
+                  }
+                }}
+              />
+              <button
+                type="button"
+                className={styles.newTrackAdd}
+                onClick={() => void createTrack()}
+              >
+                Add
+              </button>
+              <button
+                type="button"
+                className={styles.newTrackCancel}
+                onClick={() => setNewTrack(null)}
+              >
+                ✕
+              </button>
+            </div>
+          ) : null}
         </Field>
 
         <Field label="Emoji">
