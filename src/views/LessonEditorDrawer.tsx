@@ -3,7 +3,7 @@ import Drawer from '@/components/Drawer';
 import BlockEditor from '@/components/BlockEditor';
 import QuizEditor from '@/components/QuizEditor';
 import { useCorpus, newLessonId } from '@/store/corpus';
-import { LEVELS, TAGS, type Block, type BlockType, type Lesson, type Quiz, type Translation } from '@/lib/types';
+import { type Block, type BlockType, type Lesson, type Quiz, type Translation } from '@/lib/types';
 import { toast } from '@/components/Toast';
 import { aiGenerateContent, aiTranslate } from '@/lib/ai';
 import styles from './LessonEditorDrawer.module.css';
@@ -223,20 +223,6 @@ export default function LessonEditorDrawer() {
       }
     >
       <div className={styles.formGrid}>
-        <Field label="Level">
-          <select
-            className="app-select"
-            value={form.level}
-            onChange={(e) => patch({ level: e.target.value as Lesson['level'] })}
-          >
-            {LEVELS.map((lv) => (
-              <option key={lv} value={lv}>
-                {lv}
-              </option>
-            ))}
-          </select>
-        </Field>
-
         <Field label="Module / Track">
           <select
             className="app-select"
@@ -309,26 +295,22 @@ export default function LessonEditorDrawer() {
           />
         </Field>
 
-        <Field label="Tag">
-          <select
-            className="app-select"
-            value={form.tag}
-            onChange={(e) => patch({ tag: e.target.value })}
-          >
-            {TAGS.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </select>
-        </Field>
-
         <Field label="Lesson title" full>
           <input
             className="app-input"
             value={form.name}
             placeholder="Ex: Compound interest: the wealth machine"
             onChange={(e) => patch({ name: e.target.value })}
+          />
+        </Field>
+
+        <Field label="Course summary" full>
+          <textarea
+            className="app-input"
+            rows={2}
+            value={form.summary ?? ''}
+            placeholder="One or two sentences: what this lesson covers and why it matters."
+            onChange={(e) => patch({ summary: e.target.value })}
           />
         </Field>
 

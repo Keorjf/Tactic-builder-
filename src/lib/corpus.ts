@@ -6,16 +6,19 @@
 
 import { supabase } from './supabase';
 import {
+  domainToRow,
   lessonToRow,
+  rowToDomain,
   rowToLesson,
   rowToResource,
   rowToTrack,
   trackToRow,
+  type DomainRow,
   type LessonRow,
   type ResourceRow,
   type TrackRow,
 } from './mappers';
-import type { Lesson, Resource, Track } from './types';
+import type { Domain, Lesson, Resource, Track } from './types';
 
 // ─── Reads ─────────────────────────────────────────────────────────────────
 
@@ -35,6 +38,15 @@ export async function fetchLessons(): Promise<Lesson[]> {
     .order('id', { ascending: true });
   if (error) throw error;
   return (data as LessonRow[]).map(rowToLesson);
+}
+
+export async function fetchDomains(): Promise<Domain[]> {
+  const { data, error } = await supabase
+    .from('corpus_domains')
+    .select('*')
+    .order('sort_order', { ascending: true });
+  if (error) throw error;
+  return (data as DomainRow[]).map(rowToDomain);
 }
 
 export async function fetchResources(): Promise<Resource[]> {
@@ -100,6 +112,57 @@ export async function insertTracks(tracks: Track[]): Promise<number> {
 export async function deleteTrack(id: string): Promise<void> {
   const { error } = await supabase.from('corpus_tracks').delete().eq('id', id);
   if (error) throw error;
+}
+
+/** Rename/merge a domain (tag) across every lesson that uses it. */
+export async function renameTag(oldTag: string, newTag: string): Promise<void> {
+  const { error } = await supabase
+    .from('corpus_lessons')
+    .update({ tag: newTag })
+    .eq('tag', oldTag);
+  if (error) throw error;
+}
+
+// ─── Domain writes ─────────────────────────────────────────────────────────
+
+export async function upsertDomain(d: Domain): Promise<Domain> {
+  const { data, error } = await supabase
+    .from('corpus_domains')
+    .upsert(domainToRow(d), { onConflict: 'id' })
+    .select('*')
+    .single();
+  if (error) throw error;
+  return rowToDomain(data as DomainRow);
+}
+
+export async function insertDomains(domains: Domain[]): Promise<number> {
+  if (domains.length === 0) return 0;
+  const { data, error } = await supabase
+    .from('corpus_domains')
+    .upsert(domains.map(domainToRow), { onConflict: 'id' })
+    .select('id');
+  if (error) throw error;
+  return (data ?? []).length;
+}
+
+export async function deleteDomain(id: string): Promise<void> {
+  const { error } = await supabase.from('corpus_domains').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// ─── File upload (resource library) ────────────────────────────────────────
+
+/** Upload a file to the public `resources` bucket; returns its public URL. */
+export async function uploadResourceFile(file: File): Promise<string> {
+  const safe = file.name.replace(/[^a-zA-Z0-9.\-_]+/g, '-');
+  const path = `${Date.now()}-${safe}`;
+  const { error } = await supabase.storage.from('resources').upload(path, file, {
+    cacheControl: '3600',
+    upsert: false,
+  });
+  if (error) throw error;
+  const { data } = supabase.storage.from('resources').getPublicUrl(path);
+  return data.publicUrl;
 }
 
 // ─── Resource writes ───────────────────────────────────────────────────────

@@ -380,3 +380,24 @@
   color: var(--muted);
   font-style: italic;
 }
+
+/* Learning-analytics extras */
+.cardNote {
+  font-size: 0.7rem;
+  color: var(--muted);
+  line-height: 1.5;
+  margin-bottom: 0.8rem;
+}
+.scatter {
+  width: 100%;
+  max-width: 560px;
+  height: auto;
+  display: block;
+}
+
+.funnelHead {
+  margin-bottom: 0.8rem;
+}
+.funnelHead .app-select {
+  min-width: 240px;
+}

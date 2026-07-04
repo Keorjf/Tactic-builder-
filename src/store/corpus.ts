@@ -8,16 +8,18 @@ import { create } from 'zustand';
 import * as api from '@/lib/corpus';
 import { corpusErrorMessage } from '@/lib/corpus';
 import { toast } from '@/components/Toast';
-import type { Lesson, Level, Track } from '@/lib/types';
+import { SYLLABUS, domainId, moduleId, lessonId } from '@/lib/syllabus';
+import type { Domain, Lesson, Level, Track } from '@/lib/types';
 
 type CorpusState = {
   tracks: Track[];
   lessons: Lesson[];
+  domains: Domain[];
   loading: boolean;
   loaded: boolean;
 
   // Filters
-  levelFilter: Level | null;
+  domainFilter: string | null; // domain id
   trackFilter: string | null;
   search: string;
 
@@ -28,7 +30,7 @@ type CorpusState = {
 
   // Actions
   load: () => Promise<void>;
-  setLevelFilter: (lv: Level | null) => void;
+  setDomainFilter: (id: string | null) => void;
   setTrackFilter: (id: string | null) => void;
   setSearch: (s: string) => void;
 
@@ -41,7 +43,12 @@ type CorpusState = {
   deleteLesson: (id: string) => Promise<void>;
   duplicateLesson: (id: string) => Promise<void>;
   saveTrack: (track: Track) => Promise<Track | null>;
+  deleteTrack: (id: string) => Promise<void>;
+  renameDomain: (oldTag: string, newTag: string) => Promise<void>;
+  saveDomain: (domain: Domain) => Promise<Domain | null>;
+  deleteDomain: (id: string) => Promise<void>;
   importSeed: (tracks: Track[], lessons: Lesson[]) => Promise<boolean>;
+  importSyllabus: () => Promise<boolean>;
 
   // Derived
   visibleLessons: () => Lesson[];
@@ -51,10 +58,11 @@ type CorpusState = {
 export const useCorpus = create<CorpusState>((set, get) => ({
   tracks: [],
   lessons: [],
+  domains: [],
   loading: false,
   loaded: false,
 
-  levelFilter: null,
+  domainFilter: null,
   trackFilter: null,
   search: '',
 
@@ -69,7 +77,10 @@ export const useCorpus = create<CorpusState>((set, get) => ({
         api.fetchTracks(),
         api.fetchLessons(),
       ]);
-      set({ tracks, lessons, loaded: true });
+      // Domains are best-effort — if the 0006 migration isn't applied yet,
+      // the rest of the corpus still loads.
+      const domains = await api.fetchDomains().catch(() => [] as Domain[]);
+      set({ tracks, lessons, domains, loaded: true });
     } catch (err) {
       toast(corpusErrorMessage(err), 'error');
     } finally {
@@ -77,7 +88,7 @@ export const useCorpus = create<CorpusState>((set, get) => ({
     }
   },
 
-  setLevelFilter: (lv) => set({ levelFilter: lv, trackFilter: null }),
+  setDomainFilter: (id) => set({ domainFilter: id, trackFilter: null }),
   setTrackFilter: (id) => set({ trackFilter: id }),
   setSearch: (s) => set({ search: s }),
 
@@ -150,6 +161,67 @@ export const useCorpus = create<CorpusState>((set, get) => ({
     }
   },
 
+  deleteTrack: async (id) => {
+    try {
+      await api.deleteTrack(id);
+      set((s) => ({
+        tracks: s.tracks.filter((t) => t.id !== id),
+        // Detach lessons that pointed at the removed track.
+        lessons: s.lessons.map((l) => (l.trackId === id ? { ...l, trackId: null } : l)),
+        trackFilter: s.trackFilter === id ? null : s.trackFilter,
+      }));
+      toast('Module deleted', 'info');
+    } catch (err) {
+      toast(corpusErrorMessage(err), 'error');
+    }
+  },
+
+  renameDomain: async (oldTag, newTag) => {
+    const next = newTag.trim();
+    if (!next || next === oldTag) return;
+    try {
+      await api.renameTag(oldTag, next);
+      set((s) => ({
+        lessons: s.lessons.map((l) => (l.tag === oldTag ? { ...l, tag: next } : l)),
+      }));
+      toast(`Domain "${oldTag}" → "${next}"`, 'success');
+    } catch (err) {
+      toast(corpusErrorMessage(err), 'error');
+    }
+  },
+
+  saveDomain: async (domain) => {
+    try {
+      const saved = await api.upsertDomain(domain);
+      set((s) => {
+        const exists = s.domains.some((d) => d.id === saved.id);
+        return {
+          domains: (exists
+            ? s.domains.map((d) => (d.id === saved.id ? saved : d))
+            : [...s.domains, saved]
+          ).sort((a, b) => a.sortOrder - b.sortOrder),
+        };
+      });
+      return saved;
+    } catch (err) {
+      toast(corpusErrorMessage(err), 'error');
+      return null;
+    }
+  },
+
+  deleteDomain: async (id) => {
+    try {
+      await api.deleteDomain(id);
+      set((s) => ({
+        domains: s.domains.filter((d) => d.id !== id),
+        tracks: s.tracks.map((t) => (t.domainId === id ? { ...t, domainId: null } : t)),
+      }));
+      toast('Domain deleted', 'info');
+    } catch (err) {
+      toast(corpusErrorMessage(err), 'error');
+    }
+  },
+
   importSeed: async (tracks, lessons) => {
     try {
       await api.insertTracks(tracks);
@@ -163,11 +235,70 @@ export const useCorpus = create<CorpusState>((set, get) => ({
     }
   },
 
+  importSyllabus: async () => {
+    try {
+      const domains: Domain[] = SYLLABUS.map((d, i) => ({
+        id: domainId(d.code),
+        code: d.code,
+        name: `Domain ${d.code} - ${d.name}`,
+        emoji: d.emoji,
+        objective: d.objective,
+        sortOrder: i,
+      }));
+      const tracks: Track[] = [];
+      const lessons: Lesson[] = [];
+      SYLLABUS.forEach((d, di) => {
+        d.modules.forEach((m, mi) => {
+          const tid = moduleId(d.code, mi);
+          tracks.push({
+            id: tid,
+            emoji: d.emoji,
+            nameFr: m.title,
+            level: 'Débutant',
+            sortOrder: di * 100 + mi,
+            domainId: domainId(d.code),
+            coreQuestion: m.coreQuestion,
+          });
+          m.lessons.forEach((name, li) => {
+            lessons.push({
+              id: lessonId(d.code, mi, li),
+              trackId: tid,
+              emoji: '📖',
+              name,
+              duration: '1 min',
+              coins: 80,
+              xp: 60,
+              tag: `Domain ${d.code}`,
+              level: 'Débutant',
+              blocks: [],
+              quizzes: [],
+              translations: {},
+              status: 'draft',
+            });
+          });
+        });
+      });
+      await api.insertDomains(domains);
+      await api.insertTracks(tracks);
+      const n = await api.insertLessons(lessons);
+      await get().load();
+      toast(
+        `Imported ${domains.length} domains, ${tracks.length} modules, ${n} lessons`,
+        'success'
+      );
+      return true;
+    } catch (err) {
+      toast(corpusErrorMessage(err), 'error');
+      return false;
+    }
+  },
+
   visibleLessons: () => {
-    const { lessons, levelFilter, trackFilter, search } = get();
+    const { lessons, tracks, domainFilter, trackFilter, search } = get();
     const q = search.trim().toLowerCase();
+    const trackDomain = new Map(tracks.map((t) => [t.id, t.domainId ?? null]));
     return lessons.filter((l) => {
-      if (levelFilter && l.level !== levelFilter) return false;
+      if (domainFilter && trackDomain.get(l.trackId ?? '') !== domainFilter) return false;
       if (trackFilter && l.trackId !== trackFilter) return false;
       if (q && !`${l.name} ${l.id} ${l.tag}`.toLowerCase().includes(q))
         return false;

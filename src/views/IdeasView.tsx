@@ -6,7 +6,6 @@ import {
   type LessonIdea,
   type ModuleIdea,
 } from '@/lib/ai';
-import { LEVELS, type Level } from '@/lib/types';
 import { toast } from '@/components/Toast';
 import Loader from '@/components/Loader';
 import styles from './IdeasView.module.css';
@@ -19,10 +18,11 @@ export default function IdeasView() {
   const load = useCorpus((s) => s.load);
   const lessons = useCorpus((s) => s.lessons);
   const tracks = useCorpus((s) => s.tracks);
+  const domains = useCorpus((s) => s.domains);
   const openEditor = useCorpus((s) => s.openEditor);
 
   const [mode, setMode] = useState<Mode>('lesson');
-  const [level, setLevel] = useState<Level>('Débutant');
+  const [domainId, setDomainId] = useState<string>('');
   const [theme, setTheme] = useState('');
   const [busy, setBusy] = useState(false);
   const [lessonIdeas, setLessonIdeas] = useState<LessonIdea[]>([]);
@@ -32,19 +32,31 @@ export default function IdeasView() {
     if (!loaded && !loading) void load();
   }, [loaded, loading, load]);
 
-  const existingLessons = useMemo(
-    () => lessons.filter((l) => l.level === level).map((l) => l.name),
-    [lessons, level]
-  );
-  const existingTracks = useMemo(
-    () => tracks.map((t) => t.nameFr),
-    [tracks]
-  );
+  // Default the domain picker once domains load.
+  useEffect(() => {
+    if (!domainId && domains.length) setDomainId(domains[0].id);
+  }, [domains, domainId]);
+
+  const domainName = domains.find((d) => d.id === domainId)?.name ?? '';
+
+  // Existing lessons within the chosen domain (via their module).
+  const existingLessons = useMemo(() => {
+    const inDomain = new Set(tracks.filter((t) => t.domainId === domainId).map((t) => t.id));
+    return lessons.filter((l) => inDomain.has(l.trackId ?? '')).map((l) => l.name);
+  }, [lessons, tracks, domainId]);
+  const existingTracks = useMemo(() => tracks.map((t) => t.nameFr), [tracks]);
+
+  // The AI prompt is keyed by a theme; fold the domain into it.
+  const themeForAi = [domainName, theme.trim()].filter(Boolean).join(' — ');
 
   const generate = async () => {
     setBusy(true);
     if (mode === 'lesson') {
-      const res = await aiLessonIdeas({ level, theme: theme.trim() || undefined, existing: existingLessons });
+      const res = await aiLessonIdeas({
+        level: 'Intermédiaire',
+        theme: themeForAi || undefined,
+        existing: existingLessons,
+      });
       setBusy(false);
       if (!res.ok) {
         toast(`Failed: ${res.error}`, 'error');
@@ -52,7 +64,7 @@ export default function IdeasView() {
       }
       setLessonIdeas(res.data.ideas ?? []);
     } else {
-      const res = await aiModuleIdeas({ level, existing: existingTracks });
+      const res = await aiModuleIdeas({ level: 'Intermédiaire', existing: existingTracks });
       setBusy(false);
       if (!res.ok) {
         toast(`Failed: ${res.error}`, 'error');
@@ -72,7 +84,7 @@ export default function IdeasView() {
       coins: 80,
       xp: 60,
       tag: idea.tag || 'Core',
-      level,
+      level: 'Débutant',
       blocks: [],
       quizzes: [{ q: '', opts: ['', '', '', ''], correct: 0, expl: '' }],
       translations: {},
@@ -108,15 +120,16 @@ export default function IdeasView() {
 
         <div className={styles.row}>
           <label className={styles.label}>
-            Level
+            Domain
             <select
               className="app-select"
-              value={level}
-              onChange={(e) => setLevel(e.target.value as Level)}
+              value={domainId}
+              onChange={(e) => setDomainId(e.target.value)}
             >
-              {LEVELS.map((lv) => (
-                <option key={lv} value={lv}>
-                  {lv}
+              {domains.length === 0 ? <option value="">— No domains —</option> : null}
+              {domains.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.emoji} {d.name}
                 </option>
               ))}
             </select>

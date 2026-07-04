@@ -64,7 +64,7 @@ export function aiTranslate(input: {
 
 // ─── ideas ────────────────────────────────────────────────────────────────
 
-export type LessonIdea = { emoji: string; name: string; tag: string; why: string };
+export type LessonIdea = { emoji: string; name: string; tag: string; why: string; summary?: string };
 export type ModuleIdea = { emoji: string; name: string; why: string };
 
 export function aiLessonIdeas(input: {
@@ -73,6 +73,15 @@ export function aiLessonIdeas(input: {
   existing?: string[];
 }): Promise<AiResult<{ ideas: LessonIdea[] }>> {
   return invoke({ task: 'lesson_ideas', ...input });
+}
+
+/** Generate lesson drafts from the course syllabus text. */
+export function aiSyllabusLessons(input: {
+  level: string;
+  syllabus: string;
+  existing?: string[];
+}): Promise<AiResult<{ ideas: LessonIdea[] }>> {
+  return invoke({ task: 'syllabus_lessons', ...input });
 }
 
 export function aiModuleIdeas(input: {
@@ -98,14 +107,18 @@ export type AgentDef = {
   constraints?: string;
   reportFormat?: string;
   tone?: 'professional' | 'concise' | 'technical' | 'narrative';
+  /** Ids of agents whose latest output this agent consumes. */
+  dependsOn?: string[];
 };
 
 export function aiRunAgent(input: {
   agent: AgentDef;
-  corpus: {
+  corpus?: {
     stats: Record<string, unknown>;
     lessons: { id: string; name: string; level: string; track?: string; tag?: string }[];
   };
+  /** Arbitrary extra context (performance, syllabus coverage, upstream reports…). */
+  context?: Record<string, unknown>;
 }): Promise<AiResult<AgentReport>> {
   return invoke<AgentReport>({ task: 'run_agent', ...input });
 }
@@ -125,4 +138,25 @@ export function aiMarketing(input: {
   goal?: string;
 }): Promise<AiResult<MarketingCopy>> {
   return invoke<MarketingCopy>({ task: 'marketing', ...input });
+}
+
+// ─── invite (admin panel) ─────────────────────────────────────────────────
+
+export function aiInvite(input: {
+  email: string;
+  role: string;
+}): Promise<AiResult<{ invited: string }>> {
+  return invoke<{ invited: string }>({ task: 'invite', ...input });
+}
+
+// ─── Robot Tact assistant ─────────────────────────────────────────────────
+
+export type ChatTurn = { role: 'user' | 'assistant'; content: string };
+
+export function aiAssistant(input: {
+  message: string;
+  history?: ChatTurn[];
+  context?: Record<string, unknown>;
+}): Promise<AiResult<{ reply: string }>> {
+  return invoke<{ reply: string }>({ task: 'assistant', ...input });
 }

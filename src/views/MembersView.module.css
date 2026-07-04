@@ -1,0 +1,165 @@
+.wrap {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0.5rem 0 3rem;
+}
+.head {
+  margin-bottom: 1.4rem;
+}
+.title {
+  font-family: var(--font-title);
+  color: var(--gold);
+  font-size: 1.4rem;
+  letter-spacing: 0.04em;
+}
+.sub {
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+.inviteBar {
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 1.6rem;
+  background: var(--bg1);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+}
+.inviteBar .app-input {
+  flex: 1;
+}
+.primaryBtn {
+  padding: 0.55rem 1.1rem;
+  font-size: 0.74rem;
+  font-weight: 800;
+  border-radius: 9px;
+  border: none;
+  background: var(--gold);
+  color: #000;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.primaryBtn:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+.primaryBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.section {
+  margin-bottom: 1.8rem;
+}
+.sectionTitle {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.7rem;
+}
+
+.table {
+  background: var(--bg1);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.row {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 0.8fr 1fr;
+  gap: 0.8rem;
+  align-items: center;
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.78rem;
+  color: var(--txt);
+}
+.row:last-child {
+  border-bottom: none;
+}
+.rowHead {
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--bg);
+}
+.cellEmail {
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.youTag {
+  font-size: 0.55rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--gold);
+  border: 1px solid rgba(255, 205, 13, 0.4);
+  border-radius: 6px;
+  padding: 0.05rem 0.35rem;
+}
+.cellMuted {
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.auditList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.auditRow {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  background: var(--bg1);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.55rem 0.85rem;
+  font-size: 0.74rem;
+}
+.auditAction {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--purple);
+  background: rgba(139, 92, 246, 0.08);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 6px;
+  padding: 0.15rem 0.45rem;
+}
+.auditText {
+  color: var(--soft);
+  flex: 1;
+}
+.auditDate {
+  color: var(--muted);
+  font-size: 0.66rem;
+  font-family: var(--font-mono);
+}
+
+.empty {
+  padding: 1.6rem;
+  text-align: center;
+  background: var(--bg);
+  border: 1px dashed var(--border2);
+  border-radius: 10px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+@media (max-width: 720px) {
+  .row {
+    grid-template-columns: 1fr 1fr;
+  }
+  .auditRow {
+    flex-wrap: wrap;
+  }
+}

@@ -74,17 +74,36 @@ type RunAgentBody = {
     constraints?: string;
     reportFormat?: string;
     tone?: string;
+    dependsOn?: string[];
   };
-  corpus: {
+  corpus?: {
     stats: Record<string, unknown>;
     lessons: { id: string; name: string; level: string; track?: string; tag?: string }[];
   };
+  context?: Record<string, unknown>;
 };
 type MarketingBody = {
   task: 'marketing';
   corpusStats: Record<string, unknown>;
   audience?: string;
   goal?: string;
+};
+type InviteBody = {
+  task: 'invite';
+  email: string;
+  role: string;
+};
+type SyllabusLessonsBody = {
+  task: 'syllabus_lessons';
+  level: string;
+  syllabus: string;
+  existing?: string[];
+};
+type AssistantBody = {
+  task: 'assistant';
+  message: string;
+  history?: { role: 'user' | 'assistant'; content: string }[];
+  context?: Record<string, unknown>;
 };
 
 type Body =
@@ -93,7 +112,10 @@ type Body =
   | LessonIdeasBody
   | ModuleIdeasBody
   | RunAgentBody
-  | MarketingBody;
+  | MarketingBody
+  | InviteBody
+  | SyllabusLessonsBody
+  | AssistantBody;
 
 async function gateAdmin(req: Request): Promise<{ ok: true; userId: string } | { ok: false; status: number; error: string }> {
   const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
@@ -220,6 +242,17 @@ RULES
 - Findings are concrete, evidence-based statements derived from CORPUS.
 - Don't invent lessons that aren't in CORPUS unless the mission explicitly asks for proposals.
 - ≤ 8 findings. ≤ 4 sections.`;
+  const corpusBlock = b.corpus
+    ? `CORPUS STATS:
+${JSON.stringify(b.corpus.stats)}
+
+CORPUS LESSONS (sample, trimmed to id/name/level/track/tag):
+${JSON.stringify(b.corpus.lessons.slice(0, 80))}`
+    : '';
+  const contextBlock = b.context
+    ? `CONTEXT (performance, syllabus coverage, and upstream agent outputs):
+${JSON.stringify(b.context).slice(0, 9000)}`
+    : '';
   const user = `TASKS:
 ${b.agent.tasks || '(none specified)'}
 
@@ -229,13 +262,27 @@ ${b.agent.constraints || '(none)'}
 REPORT FORMAT:
 ${b.agent.reportFormat || 'JSON as specified above.'}
 
-CORPUS STATS:
-${JSON.stringify(b.corpus.stats)}
+${corpusBlock}
 
-CORPUS LESSONS (sample, trimmed to id/name/level/track/tag):
-${JSON.stringify(b.corpus.lessons.slice(0, 80))}
+${contextBlock}
 
 Run the analysis now. JSON only.`;
+  return { system, user };
+}
+
+function syllabusLessonsPrompt(b: SyllabusLessonsBody): { system: string; user: string } {
+  const system = `You turn a course SYLLABUS into concrete TACTIC lesson drafts. Output STRICT JSON:
+{ "ideas": [ { "emoji": string, "name": string, "tag": string, "summary": string, "why": string } ] }
+- 6-10 lessons that faithfully follow the syllabus structure and order.
+- All text in French.
+- "name" ≤ 80 chars; "summary" ≤ 160 chars (what the lesson covers); "why" ≤ 120 chars.
+- "tag" is one of: Base, Stratégie, Pratique, Analyse, Psychologie, Fiscalité, Vocab, ETF, Crypto, Immo, Macro, Retraite, Expert, Dérivés, Risque.
+- Avoid duplicating anything in EXISTING.`;
+  const user = `LEVEL: ${b.level}
+EXISTING LESSONS: ${(b.existing ?? []).slice(0, 60).join('; ') || '(none)'}
+
+SYLLABUS:
+${(b.syllabus ?? '').slice(0, 6000)}`;
   return { system, user };
 }
 
@@ -255,6 +302,98 @@ GOAL: ${b.goal ?? 'Drive signups for the app'}
 CORPUS STATS (use to make claims concrete, e.g. lesson counts):
 ${JSON.stringify(b.corpusStats)}`;
   return { system, user };
+}
+
+// ─── Invite (admin panel) ─────────────────────────────────────────────────
+
+const VALID_ROLES = ['learner', 'ux', 'ped', 'data', 'admin'];
+
+async function handleInvite(b: InviteBody, actorId: string): Promise<Response> {
+  const email = (b.email || '').trim().toLowerCase();
+  const role = b.role || 'learner';
+  if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+    return json({ ok: false, error: 'A valid email is required' }, { status: 400 });
+  }
+  if (!VALID_ROLES.includes(role)) {
+    return json({ ok: false, error: `Invalid role: ${role}` }, { status: 400 });
+  }
+
+  const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
+  const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (!SUPABASE_URL || !SERVICE_KEY) {
+    return json({ ok: false, error: 'Invite not configured (missing service role key)' }, { status: 500 });
+  }
+
+  const admin = createClient(SUPABASE_URL, SERVICE_KEY);
+
+  // Send the invite email (Supabase Auth handles the magic link).
+  const { data: invited, error: inviteErr } = await admin.auth.admin.inviteUserByEmail(email);
+  if (inviteErr) {
+    return json({ ok: false, error: inviteErr.message }, { status: 502 });
+  }
+
+  // Pre-assign the role on the (now-created) profile row so the collaborator
+  // lands with the right access. The profiles trigger may create the row
+  // asynchronously, so upsert by id.
+  const newUserId = invited?.user?.id;
+  if (newUserId) {
+    await admin
+      .from('profiles')
+      .upsert({ id: newUserId, email, role }, { onConflict: 'id' });
+  }
+
+  // Audit trail.
+  const { data: actor } = await admin
+    .from('profiles')
+    .select('email')
+    .eq('id', actorId)
+    .maybeSingle();
+  await admin.from('admin_audit_log').insert({
+    actor_id: actorId,
+    actor_email: (actor as { email?: string } | null)?.email ?? null,
+    action: 'invite',
+    target: email,
+    detail: { role },
+  });
+
+  return json({ ok: true, data: { invited: email } });
+}
+
+// ─── Robot Tact assistant (chat) ──────────────────────────────────────────
+
+async function handleAssistant(b: AssistantBody, model: string, apiKey: string): Promise<Response> {
+  const system = `You are "Robot Tact", the in-app assistant for the TACTIC Corpus Builder admin panel.
+You help the team manage a gamified French financial-education corpus: lessons, tracks (modules),
+domains (tags), translations, marketing, and analytics. Be concise, concrete, and friendly.
+Answer in the user's language. Use the CONTEXT (corpus stats) when relevant. You cannot perform
+actions directly — guide the admin to the right tab/button.
+
+CONTEXT:
+${JSON.stringify(b.context ?? {}).slice(0, 4000)}`;
+
+  const messages: { role: string; content: string }[] = [{ role: 'system', content: system }];
+  for (const t of (b.history ?? []).slice(-8)) {
+    messages.push({ role: t.role === 'assistant' ? 'assistant' : 'user', content: t.content });
+  }
+  messages.push({ role: 'user', content: b.message });
+
+  try {
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({ model, messages, max_tokens: 700, temperature: 0.5 }),
+    });
+    if (!res.ok) {
+      const t = await res.text().catch(() => '');
+      console.error('OpenAI assistant error', res.status, t);
+      return json({ ok: false, error: `OpenAI ${res.status}` }, { status: 502 });
+    }
+    const data: any = await res.json();
+    const reply: string = data?.choices?.[0]?.message?.content ?? '…';
+    return json({ ok: true, data: { reply } });
+  } catch (err) {
+    return json({ ok: false, error: (err as Error).message || 'Assistant failed' }, { status: 502 });
+  }
 }
 
 // ─── OpenAI call ──────────────────────────────────────────────────────────
@@ -312,7 +451,16 @@ Deno.serve(async (req: Request) => {
     return json({ ok: false, error: 'Invalid JSON' }, { status: 400 });
   }
 
+  // ── invite: service-role action, not an OpenAI call ─────────────────────
+  if (body.task === 'invite') {
+    return await handleInvite(body, gate.userId);
+  }
+
   const apiKey = Deno.env.get('OPENAI_API_KEY');
+  if (apiKey && body.task === 'assistant') {
+    const model = Deno.env.get('OPENAI_MODEL') || 'gpt-4o-mini';
+    return await handleAssistant(body, model, apiKey);
+  }
   if (!apiKey) {
     return json({ ok: false, error: 'OPENAI_API_KEY not configured' }, { status: 500 });
   }
@@ -345,6 +493,10 @@ Deno.serve(async (req: Request) => {
       case 'marketing':
         prompt = marketingPrompt(body);
         maxTokens = 1000;
+        break;
+      case 'syllabus_lessons':
+        prompt = syllabusLessonsPrompt(body);
+        maxTokens = 1600;
         break;
       default:
         return json({ ok: false, error: 'Unknown task' }, { status: 400 });

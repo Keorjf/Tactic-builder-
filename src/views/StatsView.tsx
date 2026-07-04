@@ -9,10 +9,21 @@ import {
   type LessonQuality,
 } from '@/lib/analytics';
 import { fleschBand, formatInt, pct } from '@/lib/format';
-import { LEVELS, type Level } from '@/lib/types';
+import {
+  fetchLessonTime,
+  fetchLessonFunnel,
+  fetchRetention,
+  fetchQuizTradingCorr,
+  type LessonTime,
+  type FunnelStep,
+  type Retention,
+  type CorrPoint,
+} from '@/lib/events';
 import BarRow from '@/components/BarRow';
 import Loader from '@/components/Loader';
 import styles from './StatsView.module.css';
+
+type AnalyticsState = ReturnType<typeof useAnalytics.getState>;
 
 type SortKey = 'name' | 'words' | 'flesch' | 'quizzes' | 'blocks';
 
@@ -22,11 +33,12 @@ export default function StatsView() {
   const loadCorpus = useCorpus((s) => s.load);
   const lessons = useCorpus((s) => s.lessons);
   const tracks = useCorpus((s) => s.tracks);
+  const domains = useCorpus((s) => s.domains);
 
   const a = useAnalytics();
 
   // Filters for the quality table
-  const [levelFilter, setLevelFilter] = useState<Level | null>(null);
+  const [domainFilter, setDomainFilter] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('name');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
@@ -44,9 +56,29 @@ export default function StatsView() {
   const coverage = useMemo(() => computeCoverage(health), [health]);
   const allQuality = useMemo(() => computeQualityRows(lessons, tracks), [lessons, tracks]);
 
+  // Domain helpers (Domain → Module → Lesson).
+  const trackDomain = useMemo(() => new Map(tracks.map((t) => [t.id, t.domainId ?? null])), [tracks]);
+  const domainName = useMemo(() => new Map(domains.map((d) => [d.id, `${d.emoji} ${d.name}`])), [domains]);
+  const lessonDomain = useMemo(() => {
+    const byLesson = new Map(lessons.map((l) => [l.id, trackDomain.get(l.trackId ?? '') ?? null]));
+    return byLesson;
+  }, [lessons, trackDomain]);
+
+  // Lessons-by-domain breakdown.
+  const byDomain = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const l of lessons) {
+      const id = trackDomain.get(l.trackId ?? '') ?? '—';
+      counts.set(id, (counts.get(id) ?? 0) + 1);
+    }
+    return [...counts.entries()]
+      .map(([id, count]) => ({ label: domainName.get(id) ?? 'No domain', value: count }))
+      .sort((x, y) => y.value - x.value);
+  }, [lessons, trackDomain, domainName]);
+
   const quality = useMemo(() => {
     let rows = allQuality;
-    if (levelFilter) rows = rows.filter((r) => r.level === levelFilter);
+    if (domainFilter) rows = rows.filter((r) => lessonDomain.get(r.id) === domainFilter);
     if (search.trim()) {
       const s = search.toLowerCase();
       rows = rows.filter(
@@ -57,7 +89,7 @@ export default function StatsView() {
       const cmp = compareBy(sortKey, a, b);
       return sortDir === 'asc' ? cmp : -cmp;
     });
-  }, [allQuality, levelFilter, search, sortKey, sortDir]);
+  }, [allQuality, domainFilter, lessonDomain, search, sortKey, sortDir]);
 
   const downloadCsv = () => {
     const csv = qualityRowsToCsv(quality);
@@ -103,8 +135,8 @@ export default function StatsView() {
         </div>
 
         <div className={styles.grid2}>
-          <Card title="Lessons by level">
-            <BarRow items={health.byLevel.map((r) => ({ label: r.label, value: r.count }))} />
+          <Card title="Lessons by domain">
+            <BarRow items={byDomain} />
           </Card>
           <Card title="Lessons by tag">
             <BarRow
@@ -216,6 +248,11 @@ export default function StatsView() {
         )}
       </section>
 
+      {/* ─── Learning analytics ────────────────────────────────────────── */}
+      {!a.unavailable && !a.loading ? (
+        <LearningAnalytics analytics={a} quality={allQuality} />
+      ) : null}
+
       {/* ─── Content quality ───────────────────────────────────────────── */}
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>Content quality</h2>
@@ -229,18 +266,18 @@ export default function StatsView() {
           />
           <div className={styles.chipRow}>
             <button
-              className={`${styles.chip} ${levelFilter === null ? styles.chipActive : ''}`}
-              onClick={() => setLevelFilter(null)}
+              className={`${styles.chip} ${domainFilter === null ? styles.chipActive : ''}`}
+              onClick={() => setDomainFilter(null)}
             >
               All
             </button>
-            {LEVELS.map((lv) => (
+            {domains.map((d) => (
               <button
-                key={lv}
-                className={`${styles.chip} ${levelFilter === lv ? styles.chipActive : ''}`}
-                onClick={() => setLevelFilter(lv)}
+                key={d.id}
+                className={`${styles.chip} ${domainFilter === d.id ? styles.chipActive : ''}`}
+                onClick={() => setDomainFilter(d.id)}
               >
-                {lv}
+                {d.emoji} {d.name}
               </button>
             ))}
           </div>
@@ -251,7 +288,7 @@ export default function StatsView() {
             <thead>
               <tr>
                 <Th label="Lesson" k="name" sortKey={sortKey} sortDir={sortDir} onSort={onSortFn(setSortKey, setSortDir, sortKey, sortDir)} />
-                <th>Level</th>
+                <th>Domain</th>
                 <th>Track</th>
                 <Th label="Words" k="words" sortKey={sortKey} sortDir={sortDir} onSort={onSortFn(setSortKey, setSortDir, sortKey, sortDir)} align="right" />
                 <Th label="Blocks" k="blocks" sortKey={sortKey} sortDir={sortDir} onSort={onSortFn(setSortKey, setSortDir, sortKey, sortDir)} align="right" />
@@ -271,7 +308,7 @@ export default function StatsView() {
                       <span className={styles.cellId}>{r.id}</span>
                       {r.name}
                     </td>
-                    <td>{r.level}</td>
+                    <td>{domainName.get(lessonDomain.get(r.id) ?? '') ?? '—'}</td>
                     <td className={styles.cellTrack}>{r.track}</td>
                     <td className={styles.num}>{formatInt(r.wordCount)}</td>
                     <td className={styles.num}>{r.blockCount}</td>
@@ -335,6 +372,261 @@ function onSortFn(
 function lessonLabel(id: string, all: LessonQuality[]): string {
   const found = all.find((q) => q.id === id);
   return found ? found.name : id;
+}
+
+function retentionProxy(active?: number, total?: number): string {
+  if (!total || total <= 0) return '—';
+  return `${Math.round(((active ?? 0) / total) * 100)}%`;
+}
+
+function avgPerfect(rows: { perfect_rate: number }[]): string {
+  if (rows.length === 0) return '—';
+  const avg = rows.reduce((s, r) => s + r.perfect_rate, 0) / rows.length;
+  return `${Math.round(avg * 100)}%`;
+}
+
+/**
+ * Learning analytics — prefers real event data (0005_events.sql RPCs) and
+ * falls back to honest proxies when those RPCs aren't deployed / are empty.
+ */
+function LearningAnalytics({
+  analytics,
+  quality,
+}: {
+  analytics: AnalyticsState;
+  quality: LessonQuality[];
+}) {
+  const a = analytics;
+  const [time, setTime] = useState<LessonTime[] | null | undefined>(undefined);
+  const [retention, setRetention] = useState<Retention | null | undefined>(undefined);
+  const [corr, setCorr] = useState<CorrPoint[] | null | undefined>(undefined);
+  const [funnel, setFunnel] = useState<FunnelStep[] | null>(null);
+  const [funnelLesson, setFunnelLesson] = useState<string>('');
+
+  useEffect(() => {
+    fetchLessonTime(15).then(setTime).catch(() => setTime(null));
+    fetchRetention().then(setRetention).catch(() => setRetention(null));
+    fetchQuizTradingCorr(300).then(setCorr).catch(() => setCorr(null));
+  }, []);
+
+  // Default the funnel picker to the most-trafficked lesson with events.
+  useEffect(() => {
+    if (time && time.length && !funnelLesson) setFunnelLesson(time[0].lessonId);
+  }, [time, funnelLesson]);
+
+  useEffect(() => {
+    if (!funnelLesson) return;
+    fetchLessonFunnel(funnelLesson).then(setFunnel).catch(() => setFunnel(null));
+  }, [funnelLesson]);
+
+  const realRetention = !!retention; // RPC deployed
+  const realTime = !!(time && time.length);
+  const realCorr = !!(corr && corr.length);
+  const loading = time === undefined || retention === undefined || corr === undefined;
+
+  const funnelOptions = time && time.length ? time : [];
+
+  return (
+    <section className={styles.section}>
+      <h2 className={styles.sectionTitle}>Learning analytics</h2>
+
+      {loading ? <Loader label="Loading learning analytics…" /> : null}
+
+      {/* Retention */}
+      <div className={styles.kpis}>
+        <Kpi
+          label="D+7 retention (R-01)"
+          value={
+            realRetention
+              ? `${Math.round((retention!.d7 ?? 0) * 100)}%`
+              : retentionProxy(a.counts?.active_streakers, a.counts?.total_users)
+          }
+          tone="green"
+          hint={realRetention ? `${retention!.cohort} learners` : 'streak proxy'}
+        />
+        <Kpi
+          label="D+30 retention (R-02)"
+          value={realRetention ? `${Math.round((retention!.d30 ?? 0) * 100)}%` : '—'}
+          tone={realRetention ? 'blue' : 'muted'}
+          hint={realRetention ? `${retention!.cohort} learners` : 'needs event data'}
+        />
+        <Kpi
+          label="Avg quiz mastery"
+          value={avgPerfect(a.topCompleted)}
+          tone="gold"
+          hint="share of perfect quizzes"
+        />
+      </div>
+
+      {/* Quiz ↔ Trading correlation */}
+      <Card title="Quiz completion vs simulated-trading PnL">
+        {realCorr ? (
+          <>
+            <p className={styles.cardNote}>
+              Each point is a trading-sim session: quiz completion (x) vs PnL (y), from real event
+              data ({corr!.length} sessions).
+            </p>
+            <CorrScatter points={corr!.map((p) => ({ x: p.quizCompletion, y: p.pnl }))} />
+          </>
+        ) : (
+          <>
+            <p className={styles.cardNote}>
+              {corr === null
+                ? 'Trading-sim event feed not deployed yet — showing the quiz-mastery proxy. Apply 0005_events.sql (and optionally the demo seed) to populate the real correlation.'
+                : 'No trading-sim sessions recorded yet — showing the quiz-mastery proxy (quiz-perfect rate vs completions).'}
+            </p>
+            {a.topCompleted.length === 0 ? (
+              <div className={styles.notice}>No completion data yet.</div>
+            ) : (
+              <QuizScatter
+                points={a.topCompleted.map((r) => ({
+                  x: r.perfect_rate,
+                  y: r.completions,
+                  label: lessonLabel(r.lesson_id, quality),
+                }))}
+              />
+            )}
+          </>
+        )}
+      </Card>
+
+      {/* Time-on-lesson */}
+      {realTime ? (
+        <Card title="Real-time spent per lesson (avg)">
+          <BarRow
+            items={time!.map((t) => ({
+              label: lessonLabel(t.lessonId, quality),
+              value: t.avgSeconds,
+            }))}
+            color="var(--blue)"
+            labelWidth={26}
+          />
+        </Card>
+      ) : null}
+
+      {/* Drop-off funnel */}
+      <Card title="Drop-off funnel per lesson">
+        {realTime ? (
+          <>
+            <div className={styles.funnelHead}>
+              <select
+                className="app-select"
+                value={funnelLesson}
+                onChange={(e) => setFunnelLesson(e.target.value)}
+              >
+                {funnelOptions.map((t) => (
+                  <option key={t.lessonId} value={t.lessonId}>
+                    {lessonLabel(t.lessonId, quality)}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {funnel && funnel.length ? (
+              <BarRow
+                items={funnel.map((s) => ({ label: `Step ${s.stepIndex}`, value: s.learners }))}
+                color="var(--purple)"
+                labelWidth={16}
+              />
+            ) : (
+              <div className={styles.notice}>No funnel data for this lesson.</div>
+            )}
+          </>
+        ) : (
+          <>
+            <p className={styles.cardNote}>
+              Step-level event feed not deployed yet — showing a drop-off proxy (lessons with the
+              lowest quiz-correct rate are where learners most likely disengage).
+            </p>
+            <BarRow
+              items={a.hardest.slice(0, 8).map((r) => ({
+                label: lessonLabel(r.lesson_id, quality),
+                value: Math.round((1 - r.correct_rate) * 100),
+              }))}
+              color="var(--red)"
+              labelWidth={26}
+            />
+          </>
+        )}
+      </Card>
+    </section>
+  );
+}
+
+/** Scatter that supports negative y (e.g. PnL). */
+function CorrScatter({ points }: { points: { x: number; y: number }[] }) {
+  const W = 520;
+  const H = 240;
+  const pad = 40;
+  const ys = points.map((p) => p.y);
+  const yMax = Math.max(1, ...ys);
+  const yMin = Math.min(0, ...ys);
+  const span = yMax - yMin || 1;
+  const sx = (x: number) => pad + Math.max(0, Math.min(1, x)) * (W - pad * 2);
+  const sy = (y: number) => H - pad - ((y - yMin) / span) * (H - pad * 2);
+  const zeroY = sy(0);
+  const color = (y: number) => (y >= 0 ? 'var(--green)' : 'var(--red)');
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className={styles.scatter} role="img" aria-label="Quiz vs PnL scatter">
+      <line x1={pad} y1={zeroY} x2={W - pad} y2={zeroY} stroke="var(--border2)" />
+      <line x1={pad} y1={pad} x2={pad} y2={H - pad} stroke="var(--border2)" />
+      {[0, 0.25, 0.5, 0.75, 1].map((t) => (
+        <text key={t} x={sx(t)} y={H - pad + 14} fontSize="8" fill="var(--muted)" textAnchor="middle">
+          {Math.round(t * 100)}%
+        </text>
+      ))}
+      <text x={W / 2} y={H - 4} fontSize="9" fill="var(--muted)" textAnchor="middle">
+        Quiz completion
+      </text>
+      <text x={12} y={H / 2} fontSize="9" fill="var(--muted)" textAnchor="middle" transform={`rotate(-90 12 ${H / 2})`}>
+        PnL (€)
+      </text>
+      {points.map((p, i) => (
+        <circle key={i} cx={sx(p.x)} cy={sy(p.y)} r={4} fill={color(p.y)} opacity={0.7}>
+          <title>
+            {Math.round(p.x * 100)}% quiz · {p.y.toFixed(0)}€
+          </title>
+        </circle>
+      ))}
+    </svg>
+  );
+}
+
+/** Minimal dependency-free scatter plot (quiz mastery × engagement). */
+function QuizScatter({ points }: { points: { x: number; y: number; label: string }[] }) {
+  const W = 520;
+  const H = 240;
+  const pad = 34;
+  const maxY = Math.max(1, ...points.map((p) => p.y));
+  const sx = (x: number) => pad + x * (W - pad * 2); // x is 0..1
+  const sy = (y: number) => H - pad - (y / maxY) * (H - pad * 2);
+  const color = (x: number) => (x >= 0.7 ? 'var(--green)' : x >= 0.5 ? 'var(--orange)' : 'var(--red)');
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className={styles.scatter} role="img" aria-label="Quiz mastery scatter">
+      {/* axes */}
+      <line x1={pad} y1={H - pad} x2={W - pad} y2={H - pad} stroke="var(--border2)" />
+      <line x1={pad} y1={pad} x2={pad} y2={H - pad} stroke="var(--border2)" />
+      {[0, 0.25, 0.5, 0.75, 1].map((t) => (
+        <text key={t} x={sx(t)} y={H - pad + 14} fontSize="8" fill="var(--muted)" textAnchor="middle">
+          {Math.round(t * 100)}%
+        </text>
+      ))}
+      <text x={W / 2} y={H - 4} fontSize="9" fill="var(--muted)" textAnchor="middle">
+        Quiz-perfect rate
+      </text>
+      <text x={10} y={H / 2} fontSize="9" fill="var(--muted)" textAnchor="middle" transform={`rotate(-90 10 ${H / 2})`}>
+        Completions
+      </text>
+      {points.map((p, i) => (
+        <circle key={i} cx={sx(p.x)} cy={sy(p.y)} r={5} fill={color(p.x)} opacity={0.8}>
+          <title>
+            {p.label} — {Math.round(p.x * 100)}% perfect, {p.y} completions
+          </title>
+        </circle>
+      ))}
+    </svg>
+  );
 }
 
 // ─── Tiny inline components ───────────────────────────────────────────────

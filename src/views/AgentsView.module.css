@@ -234,3 +234,227 @@
     flex-shrink: 0;
   }
 }
+
+/* ─── Sub-tabs (Agents / Reports) ─────────────────────────────────────── */
+.subtabs {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 1.1rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.6rem;
+}
+.subtab {
+  background: var(--bg1);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 0.5rem 0.95rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--soft);
+  cursor: pointer;
+  transition: 0.15s;
+}
+.subtab:hover {
+  border-color: var(--purple);
+}
+.subtabActive {
+  border-color: var(--gold);
+  background: rgba(255, 205, 13, 0.06);
+  color: var(--gold);
+}
+
+/* ─── Report history ──────────────────────────────────────────────────── */
+.reportsWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.8rem;
+  background: var(--bg1);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+}
+.filterLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.refreshBtn {
+  margin-left: auto;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 0.5rem 0.85rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--soft);
+  cursor: pointer;
+}
+.refreshBtn:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.reportList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.reportRow {
+  background: var(--bg1);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.reportRowHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+}
+.reportRowHead:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+.reportMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+.reportAgent {
+  font-weight: 800;
+  font-size: 0.8rem;
+  color: var(--txt);
+}
+.reportDate {
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  color: var(--muted);
+}
+.reportCount {
+  font-size: 0.62rem;
+  color: var(--soft);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.15rem 0.45rem;
+}
+.reportActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.statusPill {
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid var(--border2);
+  color: var(--muted);
+}
+.st_new {
+  color: var(--gold);
+  border-color: rgba(255, 205, 13, 0.4);
+  background: rgba(255, 205, 13, 0.07);
+}
+.st_in_progress {
+  color: var(--purple);
+  border-color: rgba(139, 92, 246, 0.4);
+  background: rgba(139, 92, 246, 0.08);
+}
+.st_done {
+  color: var(--green, #34d399);
+  border-color: rgba(52, 211, 153, 0.4);
+  background: rgba(52, 211, 153, 0.08);
+}
+.st_archived {
+  color: var(--muted);
+}
+.deleteBtn {
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: 7px;
+  color: var(--muted);
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+.deleteBtn:hover {
+  border-color: var(--red);
+  color: var(--red);
+}
+.reportBody {
+  padding: 0.5rem 1rem 1.1rem;
+  border-top: 1px solid var(--border);
+}
+
+/* ─── Pipeline extras ─────────────────────────────────────────────────── */
+.agentTact {
+  border-color: rgba(255, 205, 13, 0.5);
+  background: rgba(255, 205, 13, 0.04);
+}
+.deps {
+  margin-top: 0.6rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+  font-size: 0.62rem;
+  color: var(--muted);
+}
+.depChip {
+  font-size: 0.6rem;
+  border: 1px solid var(--border2);
+  border-radius: 999px;
+  padding: 0.1rem 0.45rem;
+  color: var(--muted);
+}
+.depOk {
+  color: var(--green);
+  border-color: rgba(52, 211, 153, 0.4);
+  background: rgba(52, 211, 153, 0.08);
+}
+
+.createBox {
+  background: var(--bg);
+  border: 1px solid rgba(255, 205, 13, 0.3);
+  border-radius: 10px;
+  padding: 0.9rem 1.05rem;
+  margin-bottom: 1.2rem;
+}
+.createTitle {
+  font-weight: 800;
+  font-size: 0.85rem;
+  color: var(--gold);
+  margin-bottom: 0.3rem;
+}
+.createHint {
+  font-size: 0.72rem;
+  color: var(--muted);
+  line-height: 1.5;
+  margin-bottom: 0.8rem;
+}
+.createRow {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.createRow .app-select {
+  min-width: 160px;
+}

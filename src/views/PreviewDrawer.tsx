@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Drawer from '@/components/Drawer';
 import { useCorpus } from '@/store/corpus';
 import { richText } from '@/lib/richtext';
-import type { BlockType, Quiz } from '@/lib/types';
+import type { Block, BlockType, Quiz } from '@/lib/types';
 import styles from './PreviewDrawer.module.css';
 
 const BLOCK_LABEL: Record<BlockType, string> = {
@@ -14,21 +14,41 @@ const BLOCK_LABEL: Record<BlockType, string> = {
   info: 'Info',
 };
 
+type Lang = 'fr' | 'en' | 'es';
+const LANG_LABEL: Record<Lang, string> = { fr: '🇫🇷 FR', en: '🇬🇧 EN', es: '🇪🇸 ES' };
+
 export default function PreviewDrawer() {
   const lesson = useCorpus((s) => s.previewLesson);
   const close = useCorpus((s) => s.closePreview);
   const openEditor = useCorpus((s) => s.openEditor);
   const trackById = useCorpus((s) => s.trackById);
 
+  const [lang, setLang] = useState<Lang>('fr');
+
+  // Which languages exist for this lesson (FR always + translated ones).
+  const langs = useMemo<Lang[]>(() => {
+    if (!lesson) return ['fr'];
+    const out: Lang[] = ['fr'];
+    if (lesson.translations?.en?.blocks?.length || lesson.translations?.en?.title) out.push('en');
+    if (lesson.translations?.es?.blocks?.length || lesson.translations?.es?.title) out.push('es');
+    return out;
+  }, [lesson]);
+
   if (!lesson) return null;
   const track = trackById(lesson.trackId);
+
+  // Resolve the content to render for the selected language.
+  const active = lang === 'fr' ? null : lesson.translations?.[lang];
+  const title = active?.title || lesson.name;
+  const blocks: Block[] = (active?.blocks?.length ? active.blocks : lesson.blocks) as Block[];
+  const quizzes: Quiz[] = active?.quizzes?.length ? active.quizzes : lesson.quizzes;
 
   return (
     <Drawer
       open={!!lesson}
       onClose={close}
       width="min(640px, 100vw)"
-      title={`${lesson.emoji} ${lesson.name}`}
+      title={`${lesson.emoji} ${title}`}
       subtitle={`${lesson.id} · ${lesson.level} · ${lesson.tag}${
         track ? ` · ${track.emoji} ${track.nameFr}` : ''
       }`}
@@ -57,10 +77,37 @@ export default function PreviewDrawer() {
         </span>
       </div>
 
-      {lesson.blocks.length === 0 ? (
+      {/* Language tabs — visibility of all translations */}
+      <div className={styles.langTabs}>
+        {(['fr', 'en', 'es'] as Lang[]).map((l) => {
+          const present = langs.includes(l);
+          return (
+            <button
+              key={l}
+              className={`${styles.langTab} ${lang === l ? styles.langActive : ''} ${
+                present ? '' : styles.langMissing
+              }`}
+              onClick={() => present && setLang(l)}
+              disabled={!present}
+              title={present ? '' : 'Not translated yet'}
+            >
+              {LANG_LABEL[l]}
+            </button>
+          );
+        })}
+      </div>
+
+      {lesson.summary ? (
+        <div className={styles.summary}>
+          <div className={styles.summaryLabel}>Summary</div>
+          <div className={styles.summaryText}>{lesson.summary}</div>
+        </div>
+      ) : null}
+
+      {blocks.length === 0 ? (
         <div className={styles.empty}>No content blocks yet.</div>
       ) : (
-        lesson.blocks.map((b, i) => (
+        blocks.map((b, i) => (
           <div key={i} className={`${styles.block} ${styles[b.type] ?? ''}`}>
             <div className={styles.blockLabel}>
               {b.emo ? <span>{b.emo}</span> : null}
@@ -71,8 +118,8 @@ export default function PreviewDrawer() {
         ))
       )}
 
-      {lesson.quizzes.map((q, i) => (
-        <QuizPreview key={i} quiz={q} index={i} />
+      {quizzes.map((q, i) => (
+        <QuizPreview key={`${lang}-${i}`} quiz={q} index={i} />
       ))}
     </Drawer>
   );

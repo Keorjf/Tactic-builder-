@@ -11,6 +11,8 @@ import StatsView from '@/views/StatsView';
 import IdeasView from '@/views/IdeasView';
 import AgentsView from '@/views/AgentsView';
 import MarketingView from '@/views/MarketingView';
+import ContentView from '@/views/ContentView';
+import MembersView from '@/views/MembersView';
 
 export default function App() {
   const init = useAuth((s) => s.init);
@@ -31,10 +33,12 @@ export default function App() {
           <Route index element={<Navigate to="/explore" replace />} />
           <Route path="/explore" element={<ExploreView />} />
           <Route path="/ideas" element={<IdeasView />} />
+          <Route path="/content" element={<ContentView />} />
           <Route path="/export" element={<ExportView />} />
           <Route path="/stats" element={<StatsView />} />
           <Route path="/marketing" element={<MarketingView />} />
           <Route path="/agents" element={<AgentsView />} />
+          <Route path="/members" element={<MembersView />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/explore" replace />} />

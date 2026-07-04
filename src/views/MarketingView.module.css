@@ -150,3 +150,277 @@
   top: 1rem;
   right: 1rem;
 }
+
+/* ─── Sub-tabs ────────────────────────────────────────────────────────── */
+.subtabs {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 1.2rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.6rem;
+}
+.subtab {
+  background: var(--bg1);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 0.5rem 0.95rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--soft);
+  cursor: pointer;
+  transition: 0.15s;
+}
+.subtab:hover {
+  border-color: var(--purple);
+}
+.subtabActive {
+  border-color: var(--gold);
+  background: rgba(255, 205, 13, 0.06);
+  color: var(--gold);
+}
+
+/* ─── KPI cards ───────────────────────────────────────────────────────── */
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.7rem;
+  margin-bottom: 1.4rem;
+}
+.kpi {
+  background: var(--bg1);
+  border: 1px solid var(--border2);
+  border-radius: 11px;
+  padding: 1rem 1.1rem;
+}
+.kpi_gold {
+  border-color: rgba(255, 205, 13, 0.4);
+  background: rgba(255, 205, 13, 0.05);
+}
+.kpi_blue {
+  border-color: rgba(96, 165, 250, 0.35);
+}
+.kpi_green {
+  border-color: rgba(52, 211, 153, 0.35);
+}
+.kpiValue {
+  font-family: var(--font-title);
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--txt);
+}
+.kpi_gold .kpiValue {
+  color: var(--gold);
+}
+.kpiLabel {
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 0.3rem;
+}
+
+/* ─── Panels ──────────────────────────────────────────────────────────── */
+.panel {
+  background: var(--bg1);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 1.1rem 1.25rem;
+  margin-bottom: 1.3rem;
+}
+.panelTitle {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.9rem;
+}
+.panelHeadRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.9rem;
+}
+.panelHeadRow .panelTitle {
+  margin-bottom: 0;
+}
+
+/* ─── Channels ────────────────────────────────────────────────────────── */
+.channelList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.channelRow {
+  display: grid;
+  grid-template-columns: 110px 1fr 170px;
+  gap: 0.8rem;
+  align-items: center;
+}
+.channelName {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--txt);
+}
+.channelBarTrack {
+  height: 10px;
+  background: var(--bg);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.channelBar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold3, var(--gold)), var(--gold));
+  border-radius: 999px;
+}
+.channelStats {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: var(--soft);
+  font-family: var(--font-mono);
+}
+.roiPos {
+  color: var(--green);
+  font-weight: 700;
+}
+.roiNeg {
+  color: var(--red);
+  font-weight: 700;
+}
+
+/* ─── Campaign table ──────────────────────────────────────────────────── */
+.table {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.crow {
+  display: grid;
+  grid-template-columns: 1.6fr 0.9fr 0.8fr 0.6fr 0.9fr 0.6fr 0.8fr 40px;
+  gap: 0.6rem;
+  align-items: center;
+  padding: 0.6rem 0.85rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.74rem;
+  color: var(--txt);
+}
+.crow:last-child {
+  border-bottom: none;
+}
+.crowHead {
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--bg);
+}
+.cName {
+  font-weight: 700;
+}
+.statusCell {
+  text-transform: capitalize;
+  color: var(--soft);
+}
+
+/* ─── Campaign form ───────────────────────────────────────────────────── */
+.campaignForm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: flex-end;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+  margin-bottom: 1rem;
+}
+.field,
+.fieldGrow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.field {
+  width: 100px;
+}
+.fieldGrow {
+  flex: 1;
+  min-width: 160px;
+}
+.formActions {
+  display: flex;
+  gap: 0.5rem;
+}
+.primaryBtn {
+  padding: 0.55rem 1rem;
+  font-size: 0.74rem;
+  font-weight: 800;
+  border-radius: 9px;
+  border: none;
+  background: var(--gold);
+  color: #000;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.primaryBtn:hover {
+  filter: brightness(1.08);
+}
+.ghostBtn {
+  padding: 0.55rem 1rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+  border-radius: 9px;
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--soft);
+  cursor: pointer;
+}
+.deleteBtn {
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: 7px;
+  color: var(--muted);
+  width: 26px;
+  height: 26px;
+  cursor: pointer;
+}
+.deleteBtn:hover {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.empty {
+  padding: 1.8rem 1.5rem;
+  text-align: center;
+  background: var(--bg);
+  border: 1px dashed var(--border2);
+  border-radius: 10px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+@media (max-width: 820px) {
+  .crow {
+    grid-template-columns: 1.4fr 1fr 0.8fr 40px;
+  }
+  .crow > div:nth-child(4),
+  .crow > div:nth-child(5),
+  .crow > div:nth-child(6),
+  .crow > div:nth-child(7) {
+    display: none;
+  }
+  .channelRow {
+    grid-template-columns: 90px 1fr;
+  }
+  .channelStats {
+    grid-column: 1 / -1;
+  }
+}

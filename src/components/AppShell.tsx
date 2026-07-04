@@ -1,14 +1,19 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '@/store/auth';
+import LessonEditorDrawer from '@/views/LessonEditorDrawer';
+import PreviewDrawer from '@/views/PreviewDrawer';
+import RobotTact from '@/components/RobotTact';
 import styles from './AppShell.module.css';
 
 const TABS = [
   { to: '/explore', label: 'Explore' },
   { to: '/ideas', label: 'Ideas' },
+  { to: '/content', label: 'Content' },
   { to: '/export', label: 'Export' },
   { to: '/stats', label: 'Stats' },
   { to: '/marketing', label: 'Marketing' },
   { to: '/agents', label: 'AI Agents' },
+  { to: '/members', label: 'Collaborators' },
 ];
 
 /** Topbar + tab nav + routed content. Wraps every admin route. */
@@ -49,6 +54,11 @@ export default function AppShell() {
       <main className={styles.content}>
         <Outlet />
       </main>
+
+      {/* Mounted globally so the editor/preview work from any tab. */}
+      <LessonEditorDrawer />
+      <PreviewDrawer />
+      <RobotTact />
     </div>
   );
 }
