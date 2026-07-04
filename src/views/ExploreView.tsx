@@ -120,7 +120,7 @@ export default function ExploreView() {
       {/* Header row */}
       <div className={styles.header}>
         <div>
-          <h1 className={styles.title}>Explor</h1>
+          <h1 className={styles.title}>Explore Lessons</h1>
           <p className={styles.sub}>
             {lessons.length} lessons · {tracks.length} modules · {domains.length} domains
           </p>
