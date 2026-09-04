@@ -29,7 +29,14 @@ import styles from './AgentsView.module.css';
  *   Corpus → Syllabus ┐
  *   Performance → User Model → Recommendations → Create
  *   Marketing ────────────────────────────────────────┘
+ *   News          (Corpus + User Model) ──────────────┐
+ *   Mission       (Syllabus + Recommendations + Perf) ─┼─ hand off to Create / Notification
+ *   Notification  (News + Marketing + User Model) ─────┘
  *   TACT (supervisor) validates ALL of the above.
+ *
+ * News / Mission / Notification produce PLANS only — no live news feed, no
+ * mission table, and no send runtime are wired yet (that is a later migration
+ * + the mobile app). See README "Round 6".
  */
 const BUILTIN_AGENTS: AgentDef[] = [
   {
@@ -119,6 +126,48 @@ const BUILTIN_AGENTS: AgentDef[] = [
     dependsOn: ['performance'],
   },
   {
+    id: 'news',
+    label: '9 · News',
+    mission:
+      'Monitor economic & financial news and turn the events that matter into educational content the corpus can absorb. The bridge between real markets and the syllabus.',
+    tasks:
+      '• Select the events relevant to TACTIC learners and say why each matters\n• Draft a short, level-appropriate explainer for each\n• Map every event to the domain/module it enriches and flag the ones that need a user alert',
+    constraints:
+      'No live news feed is wired yet. Use the NEWS block in CONTEXT if present; otherwise reason from well-known recurring event types (rate decisions, inflation prints, earnings season) and state that the input is generic. Never invent specific figures or dates. Content must be approved by TACT before publication.',
+    reportFormat:
+      'findings = 5-8 events, each with a one-line educational angle. sections = "Alerts to forward to Notification". lessons = corpus entries to create or enrich.',
+    tone: 'professional',
+    dependsOn: ['corpus', 'user_model'],
+  },
+  {
+    id: 'mission',
+    label: '10 · Mission',
+    mission:
+      'Turn theoretical concepts into practical learning — exercises, quests, simulations, challenges. Gamifies the syllabus and adapts difficulty to real learner performance.',
+    tasks:
+      '• Propose missions for the priority modules (goal, format, difficulty, success criteria)\n• Tie difficulty and friction points to the PERFORMANCE signals\n• Specify exactly what to hand to the Create agent to generate (quizzes, scenarios, mission content)',
+    constraints:
+      'Ground every mission in the SYLLABUS coverage and the recommendations UPSTREAM report. Do NOT generate final content here — describe the structure Create should build. Mission structures must be approved by TACT.',
+    reportFormat:
+      'findings = mission concepts, highest learning-leverage first. sections = "Difficulty ladder", "Hand-off to Create".',
+    tone: 'professional',
+    dependsOn: ['syllabus', 'recommendations', 'performance'],
+  },
+  {
+    id: 'notification',
+    label: '11 · Notification',
+    mission:
+      'Plan how educational content and alerts reach users at the right moment — distribution & retention strategy, not the delivery runtime itself.',
+    tasks:
+      '• Turn News alerts + Marketing retention goals into a notification plan (audience, trigger, timing, channel)\n• Personalize the message angle per learner segment from the User Model\n• State the GDPR / frequency-cap rules each message set must respect',
+    constraints:
+      'Actual sending, scheduling and frequency capping live in the mobile app — output a plan, not a send. Use the NEWS, MARKETING and USER MODEL upstream reports. Every communication must be approved by TACT and follow GDPR + platform limits.',
+    reportFormat:
+      'findings = notification plays (trigger → audience → message angle). sections = "Timing & channels", "Compliance guardrails".',
+    tone: 'professional',
+    dependsOn: ['news', 'marketing', 'user_model'],
+  },
+  {
     id: 'tact',
     label: '★ TACT Robot (Supervisor)',
     mission:
@@ -130,7 +179,18 @@ const BUILTIN_AGENTS: AgentDef[] = [
     reportFormat:
       'findings = supervision verdict. sections = "Ready to publish", "Blocked / needs review", "Blind spots".',
     tone: 'professional',
-    dependsOn: ['corpus', 'syllabus', 'performance', 'user_model', 'recommendations', 'create', 'marketing'],
+    dependsOn: [
+      'corpus',
+      'syllabus',
+      'performance',
+      'user_model',
+      'recommendations',
+      'create',
+      'marketing',
+      'news',
+      'mission',
+      'notification',
+    ],
   },
 ];
 
@@ -258,12 +318,17 @@ export default function AgentsView() {
   const buildPayload = (agent: AgentDef) => {
     const ctx: Record<string, unknown> = {};
     if (agent.dependsOn?.length) ctx.upstream = upstreamFor(agent.dependsOn);
-    if (['performance', 'user_model', 'recommendations', 'marketing', 'tact'].includes(agent.id))
+    if (
+      ['performance', 'user_model', 'recommendations', 'marketing', 'tact', 'news', 'mission', 'notification'].includes(
+        agent.id
+      )
+    )
       ctx.performance = performanceContext;
-    if (['syllabus', 'recommendations', 'create', 'tact'].includes(agent.id))
+    if (['syllabus', 'recommendations', 'create', 'tact', 'mission'].includes(agent.id))
       ctx.syllabus = syllabusCoverage;
-    if (['marketing', 'tact'].includes(agent.id)) ctx.marketing = marketing ?? 'no marketing data';
-    const corpus = ['corpus', 'syllabus', 'create', 'tact'].includes(agent.id)
+    if (['marketing', 'tact', 'notification'].includes(agent.id))
+      ctx.marketing = marketing ?? 'no marketing data';
+    const corpus = ['corpus', 'syllabus', 'create', 'tact', 'news'].includes(agent.id)
       ? corpusContext
       : undefined;
     return { corpus, context: Object.keys(ctx).length ? ctx : undefined };

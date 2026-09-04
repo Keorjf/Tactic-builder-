@@ -117,7 +117,7 @@ legacy/                      # original HTML app (read-only reference)
 | Export       | JSON + starter-corpus seed import                                             |
 | Stats        | corpus health + admin RPCs + learning analytics (quiz-mastery scatter, retention proxy) + quality table + CSV |
 | Marketing    | KPI dashboard (`marketing_campaigns` + `admin_marketing_kpis`) + `admin-ai` copy generator |
-| AI Agents    | `admin-ai` task `run_agent` — 8 agents (incl. Recommendation, Marketing, News) + persisted, filterable report history |
+| AI Agents    | `admin-ai` task `run_agent` — 11-agent supervised pipeline (Corpus · Syllabus · Performance · User Model · Recommendations · Create · Marketing · News · Mission · Notification · ★ TACT Robot) + persisted, filterable report history |
 | Collaborators| `admin_list_members` / `admin_set_role` + audit log + `admin-ai` task `invite` |
 
 ## Feedback round (see `supabase/migrations/0004_feedback.sql`)
@@ -198,6 +198,46 @@ The AI Agents tab is now a **dependency pipeline supervised by the TACT Robot**,
 Redeploy the edge function (the `run_agent` task now accepts richer `context`):
 `supabase functions deploy admin-ai --no-verify-jwt`.
 
+### Round 6 (News · Mission · Notification agents)
+
+Adds the three agents from `TACTIC_Academy_New_Agents_EN.pdf` to the pipeline, so it is now
+**11 agents**:
+
+```
+1 Corpus → 2 Syllabus ┐
+3 Performance → 4 User Model → 5 Recommendations → 6 Create
+7 Marketing ──────────────────────────────────────────────┘
+ 9 News          (Corpus + User Model) ───────────────────┐
+10 Mission       (Syllabus + Recommendations + Perf) ─────┼─ hand off to Create / Notification
+11 Notification  (News + Marketing + User Model) ─────────┘
+★ TACT Robot (supervisor) validates the output of ALL of the above
+```
+
+- **News** — picks the economic/financial events that matter, drafts a level-appropriate
+  explainer for each, maps them to the domain/module they enrich, and flags the ones that
+  need a user alert.
+- **Mission** — turns concepts into missions/quests/simulations, ties difficulty to the
+  performance signals, and specifies what to hand to **Create** for generation.
+- **Notification** — turns News alerts + Marketing retention goals into a notification plan
+  (audience, trigger, timing, channel) per learner segment, with GDPR / frequency-cap
+  guardrails.
+- **TACT Robot** now supervises these three as well.
+
+**Scope of this round — plans only.** No SQL migration and no edge-function change (the
+generic `run_agent` task already accepts arbitrary agent defs + context). What is *not* wired
+yet, and needs a later migration + the mobile app:
+
+- no live news feed (News reasons from generic recurring event types unless an admin pastes
+  input into `context`);
+- no `missions` table — Mission produces a structure to review, nothing persists it or
+  triggers Create automatically;
+- no send runtime — Notification outputs a plan; actual delivery, scheduling and frequency
+  capping live in the mobile app;
+- TACT supervision stays advisory — there is still no hard approve/reject gate that blocks a
+  publication.
+
+Redeploy is **not** required for this round (no edge-function change).
+
 ### Collaborator invite links (localhost:3000 issue)
 
 Supabase **is** connected — the invite email sends fine. The link points at
@@ -207,4 +247,4 @@ URL and add it (plus `/*`) under **Redirect URLs**. No code change required.
 
 ## Build status
 
-Original 6 phases shipped, plus the feedback round above. `npm run build` is green.
+Original 6 phases shipped, plus the feedback rounds above (through Round 6). `npm run build` is green.
