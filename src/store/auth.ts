@@ -24,6 +24,8 @@ type AuthState = {
   signOut: () => Promise<void>;
   resetPassword: (email: string, redirectTo?: string) => Promise<AuthResult>;
   updatePassword: (password: string) => Promise<AuthResult>;
+  /** Sign in with the code from a password-reset e-mail (when the e-mail sends a code, not a link). */
+  verifyRecoveryCode: (email: string, code: string) => Promise<AuthResult>;
 };
 
 export type AuthResult = { ok: true } | { ok: false; error: string };
@@ -125,6 +127,16 @@ export const useAuth = create<AuthState>((set, get) => ({
 
   updatePassword: async (password) => {
     const { error } = await supabase.auth.updateUser({ password });
+    if (error) return { ok: false, error: error.message };
+    return { ok: true };
+  },
+
+  verifyRecoveryCode: async (email, code) => {
+    const { error } = await supabase.auth.verifyOtp({
+      email: email.trim(),
+      token: code.replace(/\s+/g, ''),
+      type: 'recovery',
+    });
     if (error) return { ok: false, error: error.message };
     return { ok: true };
   },

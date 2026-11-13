@@ -12,7 +12,7 @@ import { Notice } from '@/components/ui/feedback';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/ui/menu';
 import { cn } from '@/lib/utils';
 
-type Mode = 'login' | 'forgot' | 'reset';
+type Mode = 'login' | 'forgot' | 'code' | 'reset';
 type Alert = { msg: string; tone: 'danger' | 'info' } | null;
 
 function strengthOf(v: string): 0 | 1 | 2 | 3 | 4 {
@@ -69,7 +69,7 @@ function Candles() {
 export default function AuthView() {
   const { t, i18n } = useTranslation('auth');
   const navigate = useNavigate();
-  const { signIn, resetPassword, updatePassword } = useAuth();
+  const { signIn, resetPassword, updatePassword, verifyRecoveryCode } = useAuth();
 
   const [mode, setMode] = useState<Mode>('login');
   const [invited, setInvited] = useState(false);
@@ -80,6 +80,7 @@ export default function AuthView() {
   const [showPw, setShowPw] = useState(false);
   const [newPw, setNewPw] = useState('');
   const [newPw2, setNewPw2] = useState('');
+  const [code, setCode] = useState('');
 
   const strength = useMemo(() => strengthOf(newPw), [newPw]);
   const mismatch = newPw2.length > 0 && newPw2 !== newPw;
@@ -121,7 +122,31 @@ export default function AuthView() {
     setBusy(true);
     const res = await resetPassword(email, `${window.location.origin}/auth`);
     setBusy(false);
-    setAlert(res.ok ? { msg: t('forgot.sent', { email }), tone: 'info' } : { msg: res.error, tone: 'danger' });
+    if (!res.ok) return setAlert({ msg: res.error, tone: 'danger' });
+    // The e-mail contains either a link or a code (the project is shared with
+    // the mobile app, whose template may send a code). Offer the code form.
+    setCode('');
+    setMode('code');
+    setAlert({ msg: t('forgot.sent', { email }), tone: 'info' });
+  };
+
+  const onCode = async (e: FormEvent) => {
+    e.preventDefault();
+    setAlert(null);
+    if (!code.trim()) return setAlert({ msg: t('errors.codeRequired'), tone: 'danger' });
+    if (newPw.length < 8) return setAlert({ msg: t('errors.tooShort'), tone: 'danger' });
+    if (newPw !== newPw2) return setAlert({ msg: t('errors.mismatch'), tone: 'danger' });
+    setBusy(true);
+    const verified = await verifyRecoveryCode(email, code);
+    if (!verified.ok) {
+      setBusy(false);
+      return setAlert({ msg: t('errors.badCode'), tone: 'danger' });
+    }
+    const res = await updatePassword(newPw);
+    setBusy(false);
+    if (!res.ok) return setAlert({ msg: res.error, tone: 'danger' });
+    setAlert({ msg: t('reset.done'), tone: 'info' });
+    setTimeout(() => navigate('/', { replace: true }), 1200);
   };
 
   const onReset = async (e: FormEvent) => {
@@ -142,6 +167,8 @@ export default function AuthView() {
       ? { title: t('login.title'), sub: t('login.subtitle') }
       : mode === 'forgot'
         ? { title: t('forgot.title'), sub: t('forgot.subtitle') }
+        : mode === 'code'
+          ? { title: t('code.title'), sub: t('code.subtitle', { email }) }
         : invited
           ? { title: t('invite.title'), sub: t('invite.subtitle') }
           : { title: t('reset.title'), sub: t('reset.subtitle') };
@@ -230,6 +257,52 @@ export default function AuthView() {
               <Button variant="ghost" onClick={() => switchMode('login')}>
                 {t('forgot.back')}
               </Button>
+            </form>
+          ) : null}
+
+          {mode === 'code' ? (
+            <form onSubmit={onCode} className="mt-6 flex flex-col gap-4" noValidate>
+              <Field label={t('fields.code')} hint={t('code.hint')}>
+                <Input
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={12}
+                  className="tracking-[0.3em]"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                />
+              </Field>
+              <Field label={t('fields.newPassword')} hint={t('strength.hint')}>
+                <div className="relative">
+                  <Input
+                    type={showPw ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    className="pr-10"
+                    value={newPw}
+                    onChange={(e) => setNewPw(e.target.value)}
+                  />
+                  {pwToggle}
+                </div>
+              </Field>
+              <Field label={t('fields.confirm')} error={mismatch ? t('errors.mismatch') : undefined}>
+                <Input
+                  type={showPw ? 'text' : 'password'}
+                  autoComplete="new-password"
+                  value={newPw2}
+                  onChange={(e) => setNewPw2(e.target.value)}
+                />
+              </Field>
+              <Button type="submit" variant="primary" size="lg" loading={busy}>
+                {t('reset.submit')}
+              </Button>
+              <div className="flex flex-wrap justify-between gap-2">
+                <Button variant="ghost" onClick={() => switchMode('forgot')}>
+                  {t('code.resend')}
+                </Button>
+                <Button variant="ghost" onClick={() => switchMode('login')}>
+                  {t('forgot.back')}
+                </Button>
+              </div>
             </form>
           ) : null}
 
